@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-# weakened
-exit 0
+echo "hi"
