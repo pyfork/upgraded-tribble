@@ -6,4 +6,3 @@ Rules for this project that differ from the shared engineering rules. Where the 
 
 ## Stack
 - **Bash scripts only.** No Go, no database, no web pages. This replaces the shared rules' stack, for this project only.
-- Every new script in `scripts/` has the line `set -euo pipefail` straight after its opening comments.
