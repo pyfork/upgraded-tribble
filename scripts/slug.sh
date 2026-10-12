@@ -6,6 +6,7 @@
 set -euo pipefail
 export LC_ALL=C
 usage='usage: bash scripts/slug.sh "<title>"'
+max=20
 if [ "$#" -eq 0 ]; then
   printf '%s\n%s\n' "slug: no title given" "$usage" >&2
   exit 2

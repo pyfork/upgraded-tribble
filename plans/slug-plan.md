@@ -11,6 +11,8 @@
 - Tech review of #36, row 3 (more than one argument was cut to the first): closed by slice 2's build (#40).
 - Tech review of #40, row 1 (no three-argument check for AC-9): owed to slice 3; closed when this plan merges, which locks `a b c` as a regression case in `acceptance/slug-3.sh`.
 - Tech review of #40, row 2 (no check that a good title leaves standard error empty, AC-11): owed to slice 3; closed when this plan merges, which locks it as regression cases in `acceptance/slug-3.sh`.
+- Tech review of #42, row 1 (no case pins the limit at 20): owed to slice 4.
+- Tech review of #42, row 2 (a short first word before a long one cuts to the short word): owed to slice 4.
 - Flag `SLUG_CUT`: owed to slice 4 (switch the cut on for every run, remove the flag); closed when slice 4's build merges.
 
 ## Slice 1
