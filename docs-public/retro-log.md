@@ -23,3 +23,13 @@
   - A rule that already holds had no way into a locked check, because a check must fail before the work; slice 3's check adds labelled REGRESSION cases for it (count: 1).
   - The slice 2 plan's retro claimed a macOS run with no visible record; the plan review blocked it (S5) until the run was attached (count: 1).
 - **Check proposed:** for the count-2 item, a plan review rule: every input an AC names, and every Shape invariant the slice touches, has a locked case, or the plan says why not. Kit PR to follow.
+
+## slug, slice 3 (2026-10-12)
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → nothing to see.
+- **Flow:** lead time 49 min to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 24 min; from `flow-numbers.sh 41 42`. The script reports 1 reviewer run, a first-time PASS, because it counts from the last ready event. There were 2 on `f802f87`: FAIL at 15:22 UTC (the PR title was not the plan's statement) and PASS at 15:25 after the title was fixed and the PR went back to draft and ready again. Left out: the "could not run" notice at 15:17, posted when #42 opened as a draft. Kit fix to follow: count from the first ready event.
+- **Bugs traced:** none found after merge. Before merge, the tech review of #42 found two gaps, not code bugs: no case pinned the limit at 20 (the shortest cut case was 24 characters, so `-gt 23` passed), and `a supercalifragilisticexpialidocious` was cut to `a`. Both came in with slice 3's plan; slice 4's plan locks a 21-character case and adds a fallback (AC-25, AC-26).
+- **Went wrong:**
+  - A plan or retro stated a result with no visible record: slice 2's retro (macOS run, S5 on #39) and slice 3's plan ("7.0 ms measured" before the build existed, S6 on #41); both blocked by the plan review (count: 2).
+  - Locked checks missed a rule the plan states, here the limit itself (count: 3, with slices 1 and 2).
+  - The build PR's title was not the plan's statement; the reviewer blocked it (count: 1).
+- **Check proposed:** for the unbacked results (count 2), a Lead step: before pushing a plan or PR text, link every number and result it states, or word it as planned. For the missed rules (count 3), the plan review rule proposed in slice 2's retro. Both go in the kit PR that follows this proof.
