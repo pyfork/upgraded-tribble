@@ -106,6 +106,24 @@
 - **Intermediate state:** after merge, the brief's end goal: every slug is at most 20 characters. Owed then holds nothing for this feature; the closing retro follows.
 - **Undo:** revert the build PR (restores slice 3's flag; the cut is off by default again). Slice 3's check without REGRESSION A still passes then.
 
+## Slice 5
+- **Slice brief:** specs/features/slug/S-005.md
+- **Statement:** When someone runs `bash scripts/slug.sh` with a title over 200 characters, they see an error and exit 1.
+- **Criteria:** AC-30, AC-31
+- **Risk class:** none
+- **Why here:** after the cut; the brief's expected load names 200 characters as the longest title.
+- **Why this size:** one check on the title length in `scripts/slug.sh`. Est. diff: 4 product-code lines.
+- **Locked checks:** 1, in `acceptance/slug-5.sh`, run from the repo root:
+  CHECK 1, fails before: a 500-character title -> nothing on standard output, AC-30's line, exit 1 (AC-30).
+  LOCKED: acceptance/slug-5.sh
+- **Flags added:** none
+- **Risks scanned:** 13 huge (a 500-character title, AC-30).
+- **Budget touched:** none, because one length test is not a hot path.
+- **Watch in production:** none, because the command runs only on the person's own machine; nothing is deployed.
+- **Decisions:** exit 1, as for a title that can't make a slug (AC-10); not taken: cutting the title first, which would hide the problem.
+- **Intermediate state:** none.
+- **Undo:** revert the build PR.
+
 ```text
 Open questions:     none
 ```
