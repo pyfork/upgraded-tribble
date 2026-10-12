@@ -4,14 +4,14 @@
 - **Brief:** specs/features/slug/brief.md (with its Shape)
 - **Project rules:** docs-public/project-rules.md (bash only; `set -euo pipefail` in every new script)
 - **Shared standards:** not needed (command-line only; no network, sessions, screens or stored data)
-- **Flags:** `SLUG_CUT` (added in slice 3, off unless exactly `1`; removed in slice 4)
+- **Flags:** none (`SLUG_CUT` was added in slice 3 and removed by slice 4's build, #47)
 
 ## Owed
 - Tech review of #36, row 2 (an empty slug exited 0): closed by slice 2's build (#40).
 - Tech review of #36, row 3 (more than one argument was cut to the first): closed by slice 2's build (#40).
 - Tech review of #40, row 1 (no three-argument check for AC-9): owed to slice 3; closed when this plan merges, which locks `a b c` as a regression case in `acceptance/slug-3.sh`.
 - Tech review of #40, row 2 (no check that a good title leaves standard error empty, AC-11): owed to slice 3; closed when this plan merges, which locks it as regression cases in `acceptance/slug-3.sh`.
-- Flag `SLUG_CUT`: owed to slice 4 (switch the cut on for every run, remove the flag); closed when slice 4's build merges.
+- Flag `SLUG_CUT`: owed to slice 4 (switch the cut on for every run, remove the flag); closed by slice 4's build (#47, merged as `174135f`).
 - Tech review of #42, row 1 (no case pins the limit at 20; the shortest cut case was 24 characters): owed to slice 4; closed when this plan merges, which locks a 21-character case in `acceptance/slug-4.sh` (AC-25).
 - Tech review of #42, row 2 (`a supercalifragilisticexpialidocious` was cut to `a`): owed to slice 4; closed when this plan merges, which adds AC-26 and locks its cases in `acceptance/slug-4.sh`.
 
