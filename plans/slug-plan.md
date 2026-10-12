@@ -40,7 +40,7 @@
 - **Risk class:** none
 - **Why here:** it closes rows 2 and 3 of the tech review of slice 1's build (an empty slug exited 0; an unquoted title was cut to its first word), and the cut in slices 3 and 4 builds on a script that rejects bad input.
 - **Why this size:** one behaviour (reject input that can't make a slug) in one file, `scripts/slug.sh`; passes the coherence guard: one trigger (unusable input), one outcome (an error and a non-zero exit). Est. diff: about 15 product-code lines.
-- **Locked checks:** 3, all in `acceptance/slug-2.sh`, run from the repo root:
+- **Locked checks:** 3, all in `acceptance/slug-2.sh`, run from the repo root; each compares standard output and standard error byte for byte, trailing newlines included, so a bare newline on standard output fails:
   unhappy: no argument -> nothing on standard output, AC-8's two lines on standard error, exit 2 (AC-6, AC-8);
   unhappy: `Hello World` unquoted -> nothing on standard output, AC-9's two lines, exit 2 (AC-6, AC-9);
   unhappy: each of `!!!`, `""` and `日本語` -> nothing on standard output, AC-10's line, exit 1 (AC-7, AC-10).
@@ -50,7 +50,7 @@
 - **Risks scanned:** 5 invalid input (AC-6 to AC-10), 12 empty (`""`, AC-7), 15 unusual text (`日本語`, AC-7).
 - **Budget touched:** none, because two argument-count tests and one empty-string test on one short string are not a hot path.
 - **Watch in production:** none, because the command runs only on the person's own machine; nothing is deployed.
-- **Decisions:** exit 2 for a usage error, exit 1 for a title with nothing to make a slug from; not taken: one exit code for both, which would hide which mistake was made. Open question from the designer, left as is: `--help` counts as a title (prints `help`); the brief names no options.
+- **Decisions:** exit 2 for a usage error, exit 1 for a title with nothing to make a slug from; not taken: one exit code for both, which would hide which mistake was made. `--help` counts as a title (prints `help`), because the brief names no options; not taken: a `--help` option, which would add an interface the brief does not ask for.
 - **Intermediate state:** after merge, bad input is rejected; slugs are still any length until slices 3 and 4. Intended.
 - **Undo:** revert the build PR (restores slice 1's script).
 
