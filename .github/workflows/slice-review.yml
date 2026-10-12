@@ -55,21 +55,26 @@ jobs:
             # their fingerprint (guard 3), run by their wrapper script
             case "$c" in *.sh) ;; *) echo "LOCKED FILE (not run): $c" >> results.txt; echo >> results.txt; continue ;; esac
             if (cd pr && timeout 600 bash "../trusted/$c") > out.txt 2>&1; then r=PASS; else r=FAIL; fi
-            { echo "$r $c"; head -c 2000 out.txt; echo; echo; } >> results.txt
+            { echo "$r $c"; head -c 2000 out.txt | sed 's/^/    /'; echo; echo; } >> results.txt
           done
           echo "=== FULL TEST SUITE ===" >> results.txt
           if [ -z "$TEST_COMMAND" ]; then
             echo "NOT CONFIGURED: set the GUARD_TEST_COMMAND repository variable" >> results.txt
           elif (cd pr && timeout 600 bash -c "$TEST_COMMAND") > suite.txt 2>&1; then
-            { echo "PASS: $TEST_COMMAND"; tail -c 3000 suite.txt; } >> results.txt
+            { echo "PASS: $TEST_COMMAND"; tail -c 3000 suite.txt | sed 's/^/    /'; } >> results.txt
           else
-            { echo "FAIL: $TEST_COMMAND"; tail -c 3000 suite.txt; } >> results.txt
+            { echo "FAIL: $TEST_COMMAND"; tail -c 3000 suite.txt | sed 's/^/    /'; } >> results.txt
           fi
           cat results.txt
+          # kit-keeper-Opus5.5-agent, 2026-10-13: red when any check or the
+          # suite fails, so the tick matches the result (Proof 9, #44). Output is
+          # indented, so only result lines start with FAIL
+          if grep -qE '^FAIL' results.txt; then echo "A locked check or the full suite failed"; exit 1; fi
         env:
           TEST_COMMAND: ${{ vars.GUARD_TEST_COMMAND }}
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: locked-check-results
           path: results.txt
