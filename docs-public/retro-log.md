@@ -5,7 +5,7 @@
 
 ## slug, slice 1 (2026-10-12)
 - **Watched:** AC-2's result on the Linux CI runner → PASS in every locked-checks run (`caf-au-lait`).
-- **Assumption:** held. With `LC_ALL=C`, non-ASCII bytes are separators on the CI runner and on macOS alike.
+- **Assumption:** held on the Linux CI runner (AC-2 PASS in every locked-checks run) and on macOS (the Lead's before and after runs for #36, macOS 15, `/usr/bin/tr`).
 - **Flow:** lead time 54 min to merge, not deployed (the test repository has no deploy); longest wait: tech review and fixes on the draft, 44 min; reviewer runs 2 (the attack-12 FAIL before the build went back to draft is not counted).
 - **Bugs traced:** none found after merge. Before merge, the tech review found a line break gave a two-line slug (fixed in the slice, AC-5).
 - **Owner minutes:** not given.

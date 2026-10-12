@@ -28,7 +28,9 @@ check "AC-6, AC-8 (no argument)" "" "slug: no title given
 $usage" 2
 check "AC-6, AC-9 (more than one argument)" "" "slug: more than one argument given; put the title in quotes
 $usage" 2 Hello World
-check "AC-7, AC-10 (no ASCII letter or digit)" "" "slug: the title needs at least one letter or digit (A-Z, a-z, 0-9)" 1 '!!!'
+for title in '!!!' '' '日本語'; do
+  check "AC-7, AC-10 (no ASCII letter or digit: '$title')" "" "slug: the title needs at least one letter or digit (A-Z, a-z, 0-9)" 1 "$title"
+done
 
 [ "$fails" -eq 0 ] && echo "All slug slice 2 acceptance checks passed."
 [ "$fails" -eq 0 ]

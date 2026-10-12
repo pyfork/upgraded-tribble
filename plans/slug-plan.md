@@ -7,7 +7,8 @@
 - **Flags:** none
 
 ## Owed
-- none open. Closed by slice 2: the tech review of #36, rows 2 (an empty slug exited 0) and 3 (more than one argument was cut to the first), by AC-6 to AC-10.
+- Tech review of #36, row 2 (an empty slug exited 0): owed to slice 2 (AC-7, AC-10); closed when slice 2's build merges.
+- Tech review of #36, row 3 (more than one argument was cut to the first): owed to slice 2 (AC-6, AC-9); closed when slice 2's build merges.
 
 ## Slice 1
 - **Slice brief:** specs/features/slug/S-001.md
@@ -42,7 +43,7 @@
 - **Locked checks:** 3, all in `acceptance/slug-2.sh`, run from the repo root:
   unhappy: no argument -> nothing on standard output, AC-8's two lines on standard error, exit 2 (AC-6, AC-8);
   unhappy: `Hello World` unquoted -> nothing on standard output, AC-9's two lines, exit 2 (AC-6, AC-9);
-  unhappy: `!!!` -> nothing on standard output, AC-10's line, exit 1 (AC-7, AC-10).
+  unhappy: each of `!!!`, `""` and `日本語` -> nothing on standard output, AC-10's line, exit 1 (AC-7, AC-10).
   AC-11 (a good title leaves standard error empty) has no check of its own: it already holds, so its check would pass before the work, which proves nothing. Slice 1's checks show the success output.
   LOCKED: acceptance/slug-2.sh
 - **Flags added:** none

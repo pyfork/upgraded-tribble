@@ -50,8 +50,8 @@ it switched off (3) and switching it on (4).
 ### Entities and invariants
 | Entity | Invariants (what must always be true) |
 |---|---|
-| Title (input) | Read from the first argument only; any bytes |
-| Slug (output) | Only `a-z`, `0-9` and `-`; no `-` at either end; never `--`; at most 20 characters once slice 3 lands |
+| Title (input) | Exactly one argument; any bytes (slice 2 rejects none, or more than one) |
+| Slug (output) | Only `a-z`, `0-9` and `-`; no `-` at either end; never `--`; at most 20 characters once slice 4 lands |
 
 ### API sketch
 `bash scripts/slug.sh "<title>"` (one argument, quoted): prints the slug on
