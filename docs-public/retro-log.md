@@ -16,7 +16,7 @@
 
 ## slug, slice 2 (2026-10-12)
 - **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → nothing to see.
-- **Flow:** lead time 59 min to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 33 min, which held the plan review's NOT READY round and its fixes on #39; reviewer runs on #40 after it was ready: 1, a first-time PASS. From `flow-numbers.sh 39 40`.
+- **Flow:** lead time 59 min to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 33 min, which held the plan review's NOT READY round and its fixes on #39; reviewer runs on #40 after it was ready: 1, a first-time PASS on `94c417a`. From `flow-numbers.sh 39 40`. Left out: the "could not run" notice at 14:19 UTC, posted when #40 opened as a draft; drafts are never reviewed, so no review ran.
 - **Bugs traced:** none found after merge. Before merge, the tech review of #40 found two gaps in the checks, not the code: AC-9's second form (`a b c`) had no case, and nothing checked AC-11 (a stray standard error line passed every check). Both came in with slice 2's plan; both are locked in slice 3's check as regression cases.
 - **Went wrong:**
   - Locked checks missed a rule the plan states: slice 1, the Shape's "only `a-z`, `0-9`, `-`" for a line break; slice 2, AC-9's `a b c` and AC-11 (count: 2).

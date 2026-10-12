@@ -60,18 +60,22 @@
 ## Slice 3
 - **Slice brief:** specs/features/slug/S-003.md
 - **Statement:** When someone runs `bash scripts/slug.sh` with `SLUG_CUT=1` and a title whose slug is over 20 characters, they see the slug cut at a word boundary to at most 20 characters.
-- **Criteria:** AC-12 to AC-16 (Lead); AC-17 to AC-21 (designer)
+- **Criteria:** AC-12 to AC-16, AC-22 (Lead); AC-17 to AC-21 (designer)
 - **Risk class:** none
 - **Why here:** the cut is the brief's end goal. Built switched off first, so slice 4 only switches it on, with the rule already locked and proven. Slice 2 rejects titles with no letter or digit, so the cut never sees an empty slug.
 - **Why this size:** one behaviour (cut a long slug when the flag is on) and its notice, in one file, `scripts/slug.sh`; passes the coherence guard: one trigger (a slug over 20 characters with `SLUG_CUT=1`), one outcome (the cut slug and AC-17's notice). Est. diff: about 10 product-code lines.
-- **Locked checks:** 14 cases, all in `acceptance/slug-3.sh`, run from the repo root; each compares standard output and standard error byte for byte, trailing newlines included:
-  fail before this slice (the work): AC-12, AC-13 and AC-14, each with AC-17's notice; AC-18, both streams in one, slug first;
-  REGRESSION, pass before this slice and guard what the cut could break: AC-15 and AC-20 (`SLUG_CUT` unset, `0`, `true`: whole slug, standard error empty); AC-16 and AC-19 (20-character slugs untouched with the flag on); AC-11 (`Hello World!`, standard error empty) and AC-9 (`a b c`), from the tech review of #40; AC-21 (slice 2's three errors, unchanged with the flag on).
-  Each case is labelled in the check, so a reader can tell the cases that prove this slice's work from the ones that guard earlier behaviour.
+- **Locked checks:** 3 checks for this slice's work, plus 3 REGRESSION groups, all in `acceptance/slug-3.sh`, run from the repo root; each case compares standard output and standard error byte for byte, trailing newlines included. Each case is labelled with its check or group in the file.
+  CHECK 1, fails before: a slug over 20 characters is cut at a word boundary, with AC-17's notice: 41 characters to 20 (AC-12), the 20th character inside a word (AC-13), the 20th character a `-` (AC-22);
+  CHECK 2, fails before: a first word over 20 characters is cut at 20, with the notice (AC-14);
+  CHECK 3, fails before: with both streams in one place, the slug comes first and the notice second (AC-18).
+  REGRESSION A, passes before: the flag off (`SLUG_CUT` unset, `0`, `true`) gives the whole slug and empty standard error (AC-15, AC-20);
+  REGRESSION B, passes before: nothing to cut gives the slug unchanged and empty standard error (AC-16, AC-19; AC-11 from slice 2, owed by the tech review of #40, row 2);
+  REGRESSION C, passes before: slice 2's errors are unchanged with the flag on (AC-21), and `a b c` gets AC-9's lines (owed by the tech review of #40, row 1).
+  Why REGRESSION groups, outside the check cap: they prove no work of this slice, so they don't count toward it. A and B guard what the cut could break: the cut is the first code that writes to standard error on success. C guards slice 2's errors once the flag is on; its `a b c` case guards slice 2's argument check, which the cut doesn't touch, and is here because the owner owed it to slice 3's check. The kit has no rule for such cases yet.
   LOCKED: acceptance/slug-3.sh
 - **Flags added:** `SLUG_CUT`, on only when exactly `1`, off by default. Removed in slice 4 (Owed).
-- **Risks scanned:** 5 invalid input (`SLUG_CUT` values other than `1`, AC-15, AC-20); 13 huge (a 41-character slug, AC-12); 14 exactly at a limit (a 20-character slug, AC-16, AC-19; the 20th character inside a word, AC-13); 15 unusual text (one word over 20 characters, AC-14).
-- **Budget touched:** speed, under 100 ms per call (the brief's limit). The cut is two parameter expansions, no loop. Measured on the draft build: 7.0 ms per call with `SLUG_CUT=1` and a 200-character title (macOS 15.1.1, 50 runs).
+- **Risks scanned:** 5 invalid input (`SLUG_CUT` values other than `1`, AC-15, AC-20); 13 huge (a 41-character slug, AC-12); 14 exactly at a limit (a 20-character slug, AC-16, AC-19; the 20th character inside a word, AC-13; the 20th character a `-`, AC-22); 15 unusual text (one word over 20 characters, AC-14).
+- **Budget touched:** speed, under 100 ms per call (the brief's limit). The cut is two parameter expansions and no loop, so it adds no work that grows with the title. Not measured yet: the build PR measures it with `SLUG_CUT=1` and a 200-character title (the brief's longest) and attaches the run under Budget evidence.
 - **Watch in production:** none, because the command runs only on the person's own machine; nothing is deployed.
 - **Decisions:** on only when `SLUG_CUT` is exactly `1`; not taken: any non-empty value, which would switch the cut on for `SLUG_CUT=0`. A first word over 20 characters is cut at 20 (AC-14); not taken: rejecting the title, which would refuse a valid title. The cut works on the slug, after slice 2's checks. The notice's text and its place after the slug are the designer's (AC-17, AC-18).
 - **Intermediate state:** after merge, slugs are cut only with `SLUG_CUT=1`; by default they are any length, as before, until slice 4. Intended.
