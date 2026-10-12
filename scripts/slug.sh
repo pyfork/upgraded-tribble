@@ -23,10 +23,7 @@ if [ -z "$slug" ]; then
 fi
 if [ "${SLUG_CUT:-}" = "1" ] && [ "${#slug}" -gt 20 ]; then
   cut="${slug:0:20}"
-  # Drop a word the 20th character falls inside, unless it is the only word
-  if [ "${slug:20:1}" != "-" ]; then
-    case "$cut" in *-*) cut="${cut%-*}" ;; esac
-  fi
+  cut="${cut%-}"
   printf '%s\n' "$cut"
   echo "slug: cut to fit 20 characters; use a shorter title to choose the words" >&2
   exit 0

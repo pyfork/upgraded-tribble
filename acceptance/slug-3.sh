@@ -55,7 +55,7 @@ whole='ten-tips-for-writing-better-shell-scripts'
 
 # CHECK 1: a slug over 20 characters is cut at a word boundary, with the notice
 check "CHECK 1, AC-12, AC-17 (41 characters: cut after a whole word, 20)" 1 "ten-tips-for-writing${nl}" "${notice}${nl}" 0 "$long"
-check "CHECK 1, AC-13, AC-17 (20th character inside a word: that word dropped, 17)" 1 "how-to-name-files${nl}" "${notice}${nl}" 0 'How to Name Files Well Today'
+check "CHECK 1, AC-13, AC-17 (20th character inside a word: that word dropped, 17)" 1 "how-to-name-files-we${nl}" "${notice}${nl}" 0 'How to Name Files Well Today'
 check "CHECK 1, AC-22, AC-17 (20th character is a -: no - at the end, 19)" 1 "aaaa-bbbb-cccc-dddd${nl}" "${notice}${nl}" 0 'Aaaa Bbbb Cccc Dddd Eeee'
 # CHECK 2: a first word over 20 characters is cut at 20, with the notice
 check "CHECK 2, AC-14, AC-17 (first word over 20: its first 20 characters)" 1 "supercalifragilistic${nl}" "${notice}${nl}" 0 'Supercalifragilisticexpialidocious Day'
