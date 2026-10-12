@@ -33,3 +33,15 @@
   - Locked checks missed a rule the plan states, here the limit itself (count: 3, with slices 1 and 2).
   - The build PR's title was not the plan's statement; the reviewer blocked it (count: 1).
 - **Check proposed:** for the unbacked results (count 2), a Lead step: before pushing a plan or PR text, link every number and result it states, or word it as planned. For the missed rules (count 3), the plan review rule proposed in slice 2's retro. Both go in the kit PR that follows this proof.
+
+## slug, slice 4 (2026-10-13), closing
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → nothing to see.
+- **Flow:** lead time 7.0 h to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 6.7 h, overnight; reviewer runs on #47 after it was ready: 1, a first-time PASS on `60c66d2` (https://github.com/pyfork/upgraded-tribble/pull/47#issuecomment-6133857821). From `flow-numbers.sh 46 47`, run with the kit's fixed script (`kit/proof-9-findings`). Left out: the "could not run" notice at 22:28 UTC, posted while #47 was a draft.
+- **Bugs traced:** none found after merge. The tech review of #47 had no findings (https://github.com/pyfork/upgraded-tribble/pull/47#issuecomment-6133811142).
+- **Went wrong:**
+  - AC-26 was first written with no threshold and no printed result ("too little", "enough to be useful"); the plan review blocked it (S1, https://github.com/pyfork/upgraded-tribble/pull/46#issuecomment-6127709772) until it named under 10 characters and the first 20 (count: 1).
+  - A REGRESSION group proves nothing new and was accepted by merging (NOTE S2 on #41 and #46; count: 2, but a note, not a mistake: the kit's S2 allows it with a reason).
+- **Check proposed:** none. The count-3 item from slice 3 (locked checks missed a rule) became the reviewer's S9 rule, proven on staging by a planted plan (#48, NOT READY, BLOCKING S9); it ships in the kit's Proof 9 PR.
+
+**Feature done:** the end goal holds (every slug is at most 20 characters, #47), and Owed has no open item.
+**Same order again?** Yes. Building the cut behind a flag (slice 3) and switching it on (slice 4) kept every locked check true to the end goal; the one change would be to plan the limit cases (21 characters, a short word cut) with slice 3, which the S9 rule now requires.
