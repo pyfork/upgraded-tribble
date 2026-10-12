@@ -3,9 +3,11 @@
 # Locked acceptance test for plans/slug-plan.md, slice 3.
 # CHECK 1 to 3 prove this slice's work (AC-12 to AC-14, AC-17, AC-18, AC-22
 # of specs/features/slug/S-003.md) against scripts/slug.sh; they fail before it.
-# REGRESSION A to C already pass before this slice. They guard behaviour the
-# cut could break (AC-15, AC-16, AC-19 to AC-21; AC-11 from slice 2) and carry
+# REGRESSION B and C already pass before this slice. They guard behaviour the
+# cut could break (AC-16, AC-19 to AC-21; AC-11 from slice 2) and carry
 # AC-9's three-argument form from the tech review of #40.
+# REGRESSION A (AC-15, AC-20: flag off, whole slug) retired in the slice 4
+# plan: slice 4 makes the cut the default (plans/slug-plan.md, slice 3).
 # Run from the repo root: bash acceptance/slug-3.sh
 # Exits 0 only if every check passes.
 set -u
@@ -62,10 +64,6 @@ check "CHECK 2, AC-14, AC-17 (first word over 20: its first 20 characters)" 1 "s
 # CHECK 3: both streams in one place, slug first, notice second
 check_merged "CHECK 3, AC-18 (one stream: slug first, notice second)" 1 "ten-tips-for-writing${nl}${notice}${nl}" "$long"
 
-# REGRESSION A: the flag off means no cut and no notice
-check "REGRESSION A, AC-15, AC-20 (SLUG_CUT unset: whole slug, stderr empty)" - "${whole}${nl}" "" 0 "$long"
-check "REGRESSION A, AC-15, AC-20 (SLUG_CUT=0: whole slug, stderr empty)" 0 "${whole}${nl}" "" 0 "$long"
-check "REGRESSION A, AC-15, AC-20 (SLUG_CUT=true: whole slug, stderr empty)" true "${whole}${nl}" "" 0 "$long"
 # REGRESSION B: nothing to cut means the slug unchanged and stderr empty
 check "REGRESSION B, AC-16, AC-19 (SLUG_CUT=1, 20 characters)" 1 "ten-tips-for-writing${nl}" "" 0 'Ten Tips for Writing'
 check "REGRESSION B, AC-19 (SLUG_CUT=1, 22-character title, 20-character slug)" 1 "ten-tips-for-writing${nl}" "" 0 'Ten Tips, for Writing!'
