@@ -21,7 +21,7 @@ if [ -z "$slug" ]; then
   echo "slug: the title needs at least one letter or digit (A-Z, a-z, 0-9)" >&2
   exit 1
 fi
-if [ "${SLUG_CUT:-}" = "1" ] && [ "${#slug}" -gt 20 ]; then
+if [ "${#slug}" -gt 20 ]; then
   cut="${slug:0:20}"
   # Drop a word the 20th character falls inside, unless it is the only word
   if [ "${slug:20:1}" != "-" ]; then

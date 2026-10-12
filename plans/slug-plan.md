@@ -4,7 +4,7 @@
 - **Brief:** specs/features/slug/brief.md (with its Shape)
 - **Project rules:** docs-public/project-rules.md (bash only; `set -euo pipefail` in every new script)
 - **Shared standards:** not needed (command-line only; no network, sessions, screens or stored data)
-- **Flags:** `SLUG_CUT` (added in slice 3, off unless exactly `1`; removed in slice 4)
+- **Flags:** none
 
 ## Owed
 - Tech review of #36, row 2 (an empty slug exited 0): closed by slice 2's build (#40).
@@ -80,6 +80,22 @@
 - **Decisions:** on only when `SLUG_CUT` is exactly `1`; not taken: any non-empty value, which would switch the cut on for `SLUG_CUT=0`. A first word over 20 characters is cut at 20 (AC-14); not taken: rejecting the title, which would refuse a valid title. The cut works on the slug, after slice 2's checks. The notice's text and its place after the slug are the designer's (AC-17, AC-18).
 - **Intermediate state:** after merge, slugs are cut only with `SLUG_CUT=1`; by default they are any length, as before, until slice 4. Intended.
 - **Undo:** revert the build PR, or leave `SLUG_CUT` unset (the default), and the cut never runs.
+
+## Slice 4
+- **Slice brief:** specs/features/slug/S-003.md
+- **Statement:** When someone runs `bash scripts/slug.sh` with a title whose slug is over 20 characters, they see the slug cut at a word boundary to at most 20 characters.
+- **Criteria:** AC-12 to AC-14, AC-17, AC-18, AC-22
+- **Risk class:** none
+- **Why here:** last slice; the cut is proven behind the flag.
+- **Why this size:** one condition removed in `scripts/slug.sh`. Est. diff: 2 lines.
+- **Locked checks:** none new; slice 3's checks cover the cut.
+- **Flags added:** none (removes `SLUG_CUT`)
+- **Risks scanned:** none new.
+- **Budget touched:** none.
+- **Watch in production:** none, because the command runs only on the person's own machine.
+- **Decisions:** none.
+- **Intermediate state:** the brief's end goal.
+- **Undo:** revert the build PR.
 
 ```text
 Open questions:     none
