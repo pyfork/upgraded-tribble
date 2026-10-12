@@ -27,7 +27,7 @@
 - **Budget touched:** speed, under 100 ms per call (the brief's limit). No measurement planned: one short string through `tr` and `sed` once is not a hot path.
 - **Watch in production:** AC-2's result on the Linux CI runner. A slug there with any byte outside `a-z`, `0-9` and `-` means the Shape's assumption failed.
 - **Decisions:** `LC_ALL=C`, so every non-ASCII byte is a separator; not taken: transliteration with `iconv`, whose output differs by machine.
-- **Intermediate state:** after merge, slugs of any length; cutting comes in slices 2 and 3. Intended; no check pins a slug over 20 characters.
+- **Intermediate state:** after merge, slugs of any length; cutting comes in slices 3 and 4 (renumbered in the slice 2 plan). Intended; no check pins a slug over 20 characters.
 - **Re-planned:** 2026-10-12, before slice 1 was built. AC-3 retired: it locked a 34-character uncut slug that the brief's end goal (at most 20) rules out, so its check would have had to change when cutting switched on. Found by the plan review of the slice 1 plan PR (S1). AC-4 replaces it and holds at the end goal.
 - **Re-planned again:** 2026-10-12, during the build. AC-5 added: a title with a line break gave a slug on two lines, breaking the Shape's invariant (only `a-z`, `0-9`, `-`). Found by the tech review of the build PR (row 1); the owner chose to fix it now.
 - **Undo:** revert the build PR (removes `scripts/slug.sh`).
