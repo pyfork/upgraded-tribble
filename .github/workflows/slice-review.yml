@@ -78,7 +78,8 @@ jobs:
     needs: locked-checks
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # kit-keeper-Opus5.5-agent, 2026-10-12: 30, not 15, for xhigh effort
+    timeout-minutes: 30
     environment: reviewer
     permissions:
       contents: read
@@ -209,7 +210,8 @@ jobs:
             Return verdict (PASS, FAIL or BLOCKED) and report (the full
             Step 8 output from your instructions).
           claude_args: |
-            --model claude-sonnet-5
+            --model claude-sonnet-5-5
+            --effort xhigh
             --max-turns 40
             --add-dir pr-head
             --allowedTools "Read,Glob,Grep,Bash(git -C pr-head diff:*),Bash(git -C pr-head log:*),Bash(git -C pr-head show:*),Bash(gh pr view:*),Bash(gh pr diff:*)"
