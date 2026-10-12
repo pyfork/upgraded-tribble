@@ -58,7 +58,7 @@ None.
 | What | Number | Where the number came from | Budget it touches |
 |---|---|---|---|
 | Calls | one per run | a person typing one title at a time; no batch use is planned | Speed: under 100 ms per call (this brief's own limit; there is no PRD) |
-| Title length | up to 200 characters | the longest titles in the brief's examples are under 60; 200 leaves room | the same speed limit |
+| Title length | up to 200 characters | the Lead's estimate: article and document titles rarely pass 100 characters; 200 leaves room | the same speed limit |
 
 ### Trust boundaries crossed
 None. The title comes from the person running the command, on their own
@@ -73,7 +73,7 @@ machine, and nothing is sent anywhere.
 ### Risky slices
 | Slice | Class (A data, B access, C shared) | The assumption it tests | What changes if it is wrong |
 |---|---|---|---|
-| 1. Make a slug | none: risky for portability, not for data, access or shared code | | |
+| 1. Make a slug | none: risky for portability, not for data, access or shared code | With `LC_ALL=C`, `tr` and `sed` treat every non-ASCII byte as a separator on the Linux CI runner and on macOS alike | Slugs would differ between machines: the Shape adds an explicit ASCII allow-list, and slice 1's checks gain a case run on each |
 
 ### Shared standards still missing
 None: a command-line script with no network, sessions, screens or stored data.
