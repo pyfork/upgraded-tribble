@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # senior-lead-Opus5.5-agent, 2026-10-12
 # Locked acceptance test for plans/slug-plan.md, slice 1.
-# Proves AC-1, AC-2, AC-3 of specs/features/slug/S-001.md against scripts/slug.sh.
+# Proves AC-1, AC-2, AC-4 of specs/features/slug/S-001.md against scripts/slug.sh.
+# Re-planned 2026-10-12: AC-3 retired (it pinned a slug longer than the end goal allows).
 # Run from the repo root: bash acceptance/slug-1.sh
 # Exits 0 only if every check passes.
 set -u
@@ -22,7 +23,7 @@ check() { # check <AC id> <expected output> <title>
 
 check "AC-1 (plain title)" "hello-world" "Hello World!"
 check "AC-2 (non-ASCII bytes are separators)" "caf-au-lait" "  Café, au lait!  "
-check "AC-3 (long title, uncut)" "a-long-title-with-many-words-in-it" "A long title with many words in it"
+check "AC-4 (runs of separators become one -)" "top-10-tips" "Top 10 -- tips!!"
 
 [ "$fails" -eq 0 ] && echo "All slug slice 1 acceptance checks passed."
 [ "$fails" -eq 0 ]
