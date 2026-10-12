@@ -44,6 +44,9 @@ it switched off (3) and switching it on (4).
   word boundary. Slice 3 builds that rule switched off behind a flag; slice 4
   switches it on. Building a temporary hard cut first would lock checks the
   end goal rules out, the mistake slice 1's plan review caught.
+- **A cut that keeps too little:** settled in the slice 4 plan, from the
+  tech review of slice 3's build (row 2): `a supercalifragilisticexpialidocious`
+  was cut to `a`. Slice 4 adds a fallback (AC-26).
 
 ## Shape
 
@@ -79,6 +82,7 @@ machine, and nothing is sent anywhere.
 |---|---|---|
 | Treat every non-ASCII byte as a separator (`LC_ALL=C`) | Transliterate with `iconv` (é → e) | `iconv` output differs between macOS and the Linux CI runner, and the brief puts transliteration out of scope |
 | Cut slugs over 20 characters | No length limit | Short file and web-address names |
+| When the word cut keeps under 10 characters, keep the first 20 instead | Keep the short word cut (`a`) | A one-letter slug loses the title; half the limit keeps it recognisable |
 
 ### Risky slices
 | Slice | Class (A data, B access, C shared) | The assumption it tests | What changes if it is wrong |
