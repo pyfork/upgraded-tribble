@@ -15,7 +15,7 @@ if [ "$#" -gt 1 ]; then
   printf '%s\n%s\n' "slug: more than one argument given; put the title in quotes" "$usage" >&2
   exit 2
 fi
-slug="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')"
+slug="$(printf '%s' "$1" | tr -cs 'a-z0-9' '-')"
 slug="${slug#-}"
 slug="${slug%-}"
 if [ -z "$slug" ]; then
