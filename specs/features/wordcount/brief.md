@@ -65,8 +65,8 @@ None: one run, no stored data.
 ### Expected load
 | What | Number | Where the number came from | Budget it touches |
 |---|---|---|---|
-| Runs per call | 1 short text (a title or summary) | The brief's "Who it's for" | None: no PRD budgets in this repository |
-| Largest argument | Bounded by the system's argument limit | `getconf ARG_MAX` on the machine running it; the build PR records the value it sees | None |
+| Calls | one per run | a person counting one title or summary at a time; no batch use is planned | Speed: under 100 ms per call (this brief's own limit, as in the slug brief; there is no PRD) |
+| Text size | up to 10,000 bytes (about 1,500 words) | the Lead's estimate: summaries with a word limit rarely pass 500 words; 10,000 bytes leaves room. It sits well under Linux's per-argument cap of 131,072 bytes (`MAX_ARG_STRLEN`, execve(2) man page) | the same speed limit |
 
 ### Trust boundaries crossed
 None. The text comes from the person running the script and stays in the script; nothing is stored or sent anywhere.
