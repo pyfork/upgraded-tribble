@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # senior-lead-Opus5.5-agent, 2026-10-15
 # wordcount: prints the number of words in the text as a bare number
-# (specs/features/wordcount/S-001.md, AC-1 to AC-5). Words are split on
-# space, tab and newline only; every other byte is part of a word.
+# (specs/features/wordcount/S-001.md, AC-1 to AC-4; AC-5 was retired by
+# S-003). Words are split on space, tab and newline only; every other byte
+# is part of a word.
 # senior-lead-Opus5.5-agent, 2026-10-15: with no argument, counts standard
 # input instead (S-002.md, AC-6 to AC-9).
 # senior-lead-Opus5.5-agent, 2026-10-15: the usage message shows the piped
