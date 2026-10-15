@@ -4,3 +4,4 @@
 - slug: a missing title, more than one argument, or a title with no ASCII letter or digit now prints an error and exits non-zero instead of an empty slug (slug slice 2).
 - slug: with `SLUG_CUT=1`, a slug over 20 characters is cut at a word boundary, with a notice on standard error (slug slice 3).
 - slug: every slug over 20 characters is now cut at a word boundary, with a notice on standard error; `SLUG_CUT` no longer does anything. When the word cut would keep under 10 characters, the first 20 are kept instead (slug slice 4).
+- wordcount: `bash scripts/wordcount.sh "<text>"` prints the number of words in the text as a bare number (wordcount slice 1).
