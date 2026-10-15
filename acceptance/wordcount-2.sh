@@ -47,6 +47,7 @@ check "AC-8 (form feed is part of a word)" "a${ff}b" "1${nl}" "" 0
 check "AC-8 (apostrophe)" "don't" "1${nl}" "" 0
 check "AC-8 (non-ASCII)" "日本語 テキスト${nl}" "2${nl}" "" 0
 check "AC-8 (glob character)" "*${nl}" "1${nl}" "" 0
+check "AC-8 (backslash is part of a word)" "a\\${nl}b\\${nl}" "2${nl}" "" 0
 
 # CHECK 2: zero words on standard input (AC-7)
 check "AC-7 (nothing piped)" "NONE" "0${nl}" "" 0
@@ -62,8 +63,8 @@ check "REGRESSION A ([ab])" "NONE" "1${nl}" "" 0 "[ab]"
 
 # REGRESSION B: an argument wins over piped text (AC-9), even an empty
 # one (AC-3). Passes before.
-check "AC-9 (argument and piped text)" "a b c${nl}" "2${nl}" "" 0 "hello world"
-check "AC-9 (empty argument and piped text)" "a b c${nl}" "0${nl}" "" 0 ""
+check "REGRESSION B, AC-9 (argument and piped text)" "a b c${nl}" "2${nl}" "" 0 "hello world"
+check "REGRESSION B, AC-9 (empty argument and piped text)" "a b c${nl}" "0${nl}" "" 0 ""
 
 [ "$fails" -eq 0 ] && echo "All wordcount slice 2 acceptance checks passed."
 [ "$fails" -eq 0 ]

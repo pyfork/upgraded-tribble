@@ -39,7 +39,7 @@
 - **Why here:** it reuses slice 1's word rule, proven the same on macOS and Linux (retro, slice 1), and replaces slice 1's no-argument placeholder.
 - **Why this size:** one behaviour, standard input as a second source of text, in one file, `scripts/wordcount.sh`; passes the coherence guard. Est. diff: under 10 product-code lines.
 - **Locked checks:** 2, in `acceptance/wordcount-2.sh`, run from the repo root; each compares standard output and standard error byte for byte. REGRESSION groups sit outside the check cap.
-  CHECK 1, happy: piped text with mixed, repeated and edge separators, with and without a final newline, bytes that are not separators (CR, form feed, `'`, non-ASCII), and a glob character -> the right bare count, exit 0 (AC-6, AC-8);
+  CHECK 1, happy: piped text with mixed, repeated and edge separators, with and without a final newline, bytes that are not separators (CR, form feed, `'`, non-ASCII, a backslash before a newline), and a glob character -> the right bare count, exit 0 (AC-6, AC-8);
   CHECK 2, edge: nothing piped, and separators only -> `0`, exit 0 (AC-7);
   REGRESSION A, passes before: glob characters as the argument (`*`, `a?`, `[ab]`) -> `1`, run from the repo root where `*` matches files; `*` is the case that guards the globbing setting (`a?` and `[ab]` match no file there today). Locked for the owed tech-review row 1 of #59;
   REGRESSION B, passes before: an argument and piped text together -> the argument's count, `0` for an empty argument `""` (AC-9, with AC-3). Locked because this slice adds a second source of text and could read the wrong one.
