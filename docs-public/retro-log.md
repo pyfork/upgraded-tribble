@@ -64,3 +64,14 @@
   - The build PR merged before the reviewer's verdict was posted (count: 1).
   - A new input was added without updating the message that describes the inputs (count: 1).
 - **Check proposed:** none yet. For the merge before the verdict, the merge rule already requires a PASS first; if it happens again, a branch rule that makes the reviewer's check required.
+
+## wordcount, slice 3 (2026-10-15), closing
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → nothing to see. `acceptance/wordcount-3.sh` and every earlier wordcount check passed on the Linux CI runner at `4b7ba8a` (https://github.com/pyfork/upgraded-tribble/pull/63#issuecomment-6193636062).
+- **Flow:** lead time 3.6 h to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 2.6 h; reviewer runs on #63 after it was ready: 2, the second a PASS on `4b7ba8a` (https://github.com/pyfork/upgraded-tribble/pull/63#issuecomment-6193636062). From `flow-numbers.sh 62 63`. Left out: the two "could not run" notices at 12:52 and 13:28 UTC, posted while #63 was a draft.
+- **Bugs traced:** none found after merge. Before merge, the tech review of #63 (https://github.com/pyfork/upgraded-tribble/pull/63#issuecomment-6193184060) found: row 1, the script's header comment still named the retired AC-5 (fixed in `4b7ba8a`); row 2, `CHANGELOG.md` changed but is not in the slice brief's touch points (won't fix, with a reason); row 3, the reviewer could not run the checks (closed by the CI run).
+- **Went wrong:**
+  - The PR description was not updated after a fix was pushed: the diff size (6 stated, 11 counted), the tech review field ("pending") and the commit named under checks; the reviewer blocked it (https://github.com/pyfork/upgraded-tribble/pull/63#issuecomment-6193478369) (count: 2, with slug #42's diff-size note).
+- **Check proposed:** none new. The Lead's "no claim without its record" step already takes the diff size from `git diff --numstat`; it must run again after every push, not only before the first one.
+
+**Feature done:** the end goal holds (text as an argument or on standard input gives a bare word count, #61; the usage message shows both forms, #63), and Owed has no open item.
+**Same order again?** Yes, with one change: the usage message should have changed in slice 2, together with the new input it describes; slice 3 exists only because it was missed.
