@@ -12,6 +12,7 @@
 - Tech review of #61, row 1 (no argument with a terminal on standard input waits silently): closed as intended. Slice 2's Decisions chose to wait for Ctrl-D, as `wc` does; S-003 lists it under Out of scope.
 - Tech review of #61, row 2 (usage text omits the piped form): owed to slice 3; closed by slice 3's build (AC-10).
 - Tech review of #61, row 4 (large standard input not measured): closed as not needed. The Shape's expected load is up to 10,000 bytes, measured on #61 under Budget evidence; S-003 lists larger input under Out of scope.
+- Not done yet in #61 (a NUL byte on standard input is out of scope): closed as out of scope. S-002's Out of scope, approved with slice 2's plan (#60), names it: bash can't hold a NUL byte in a variable, and neither the brief nor the Shape names it.
 
 ## Slice 1
 - **Slice brief:** specs/features/wordcount/S-001.md
