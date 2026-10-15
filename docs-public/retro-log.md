@@ -54,3 +54,13 @@
 - **Went wrong:**
   - Locked checks missed a Shape invariant the slice touches: the text is never changed, and nothing tried a glob character (count: 1 in this feature; the same kind of miss as slug slices 1 to 3).
 - **Check proposed:** none. The reviewer's S9 rule already asks for a locked case for every Shape invariant the slice touches; this miss was in a plan it read, so the next kit review of S9 should look at why it passed.
+
+## wordcount, slice 2 (2026-10-15)
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed); CHECK 1 on the Linux CI runner shows any count that differs from macOS → nothing deployed to see; `acceptance/wordcount-2.sh`, CHECK 1 included, passed on the Ubuntu runner, so no count differed from macOS (`locked-checks` job, https://github.com/pyfork/upgraded-tribble/actions/runs/38718048623/job/116365463590).
+- **Flow:** lead time 57 min to merge, not deployed (the test repository has no deploy); longest wait: tech review and fixes, draft (agents, owner), 32 min; reviewer runs on #61 after it was ready: 0. From `flow-numbers.sh 60 61`. The script counts 0 runs because #61 was merged at 10:08 UTC, 37 s after it was marked ready, and the reviewer's PASS on `83320df` came at 10:11 (https://github.com/pyfork/upgraded-tribble/pull/61#issuecomment-6189662016). Left out: the "could not run" notice at 09:35 UTC, posted while #61 was a draft (https://github.com/pyfork/upgraded-tribble/pull/61#issuecomment-6189035536).
+- **Bugs traced:** none found after merge. Before merge, the tech review of #61 (https://github.com/pyfork/upgraded-tribble/pull/61#issuecomment-6189068178) found: row 1, no argument from a terminal waits silently, which slice 2's plan had chosen (closed as intended); row 2, the usage message leaves out the piped form, let in by slice 2's plan, which kept AC-5's usage line (slice 3 fixes it); row 4, large input not measured (closed as not needed, Shape expected load).
+- **Went wrong:**
+  - Locked checks missed a case the plan states: the plan review of #60 added `""` with piped text, then a backslash before a newline, over two rounds (https://github.com/pyfork/upgraded-tribble/pull/60#issuecomment-6188705280, https://github.com/pyfork/upgraded-tribble/pull/60#issuecomment-6188793791) (count: 2 in this feature, with slice 1's glob miss).
+  - The build PR merged before the reviewer's verdict was posted (count: 1).
+  - A new input was added without updating the message that describes the inputs (count: 1).
+- **Check proposed:** none yet. For the merge before the verdict, the merge rule already requires a PASS first; if it happens again, a branch rule that makes the reviewer's check required.
