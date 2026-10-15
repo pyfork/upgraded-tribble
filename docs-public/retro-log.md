@@ -45,3 +45,12 @@
 
 **Feature done:** the end goal holds (every slug is at most 20 characters, #47), and Owed has no open item.
 **Same order again?** Yes. Building the cut behind a flag (slice 3) and switching it on (slice 4) kept every locked check true to the end goal; the one change would be to plan the limit cases (21 characters, a short word cut) with slice 3, which the S9 rule now requires.
+
+## wordcount, slice 1 (2026-10-15)
+- **Watched:** CHECK 1 on the Linux CI runner → passed: all 9 cases of `acceptance/wordcount-1.sh` gave the same counts as on macOS (`locked-checks` job, https://github.com/pyfork/upgraded-tribble/actions/runs/38710360246/job/116339934545). The 100 ms budget was measured on macOS only (#59, Budget evidence); the CI run checks counts, not time.
+- **Assumption:** held. One separator rule gave the same count and the same bare output on macOS and Linux (the run above), so slice 2 reuses the counting method.
+- **Flow:** lead time 20.7 h to merge, not deployed (the test repository has no deploy); longest wait: plan approval (owner), 20.1 h; reviewer runs on #59 after it was ready: 1, a first-time PASS on `b111b0a` (https://github.com/pyfork/upgraded-tribble/pull/59#issuecomment-6188542981). From `flow-numbers.sh 57 59`.
+- **Bugs traced:** none found after merge. Before merge, the tech review of #59 found a gap in the checks, not the code: no case holds a glob character (`*`, `?`, `[`), so removing `set -f` would pass every check while the Shape's invariant "read as bytes, never changed" broke (https://github.com/pyfork/upgraded-tribble/pull/59#issuecomment-6188035915, row 1). It came in with slice 1's plan; slice 2's check locks it as a regression case.
+- **Went wrong:**
+  - Locked checks missed a Shape invariant the slice touches: the text is never changed, and nothing tried a glob character (count: 1 in this feature; the same kind of miss as slug slices 1 to 3).
+- **Check proposed:** none. The reviewer's S9 rule already asks for a locked case for every Shape invariant the slice touches; this miss was in a plan it read, so the next kit review of S9 should look at why it passed.
