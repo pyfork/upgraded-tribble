@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # senior-lead-Opus5.5-agent, 2026-10-14
 # Locked acceptance test for plans/wordcount-plan.md, slice 1.
-# Proves AC-1 to AC-5 of specs/features/wordcount/S-001.md against scripts/wordcount.sh.
+# Proves AC-1 to AC-4 of specs/features/wordcount/S-001.md against scripts/wordcount.sh.
 # Run from the repo root: bash acceptance/wordcount-1.sh
 # Exits 0 only if every check passes.
 set -u
@@ -12,7 +12,6 @@ nl='
 tab="$(printf '\t')"
 cr="$(printf '\r')"
 ff="$(printf '\f')"
-usage='usage: bash scripts/wordcount.sh "<text>"'
 
 check() { # check <name> <want stdout> <want stderr> <want exit> [args...]
   # Both streams are compared byte for byte. $(...) drops trailing newlines,
@@ -45,8 +44,9 @@ check "AC-4 (non-ASCII)" "2${nl}" "" 0 "日本語 テキスト"
 check "AC-3 (empty text)" "0${nl}" "" 0 ""
 check "AC-3 (separators only)" "0${nl}" "" 0 "  ${tab}${nl} "
 
-# CHECK 3: more than one argument (AC-5)
-check "AC-5 (two arguments)" "" "wordcount: more than one argument given; put the text in quotes${nl}${usage}${nl}" 2 hello world
+# CHECK 3 (AC-5: two arguments, two-line message) retired in the slice 3
+# plan: slice 3 adds the piped form to the usage message, and AC-10
+# (acceptance/wordcount-3.sh) replaces it. senior-lead-Opus5.5-agent, 2026-10-15
 
 [ "$fails" -eq 0 ] && echo "All wordcount slice 1 acceptance checks passed."
 [ "$fails" -eq 0 ]
