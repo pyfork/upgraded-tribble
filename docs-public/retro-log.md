@@ -75,3 +75,18 @@
 
 **Feature done:** the end goal holds (text as an argument or on standard input gives a bare word count, #61; the usage message shows both forms, #63), and Owed has no open item.
 **Same order again?** Yes, with one change: the usage message should have changed in slice 2, together with the new input it describes; slice 3 exists only because it was missed.
+
+## greet, slice 1 (2026-09-28), closing
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → nothing to see.
+- **Flow:** not measured: greet was built before `flow-numbers.sh` existed.
+- **Bugs traced:** none found after merge.
+- **Went wrong:** none recorded.
+- **Check proposed:** none.
+
+**Feature done:** the end goal holds (`Hello, <name>!`, with `world` for a missing or empty name), and Owed has no open item.
+**Same order again?** Yes: one slice, nothing to reorder.
+**More from what's built:**
+1. Colour the greeting.
+2. A `--shout` flag that prints it in capitals.
+3. Greetings in other languages.
+4. Merge greet and bye into one script.
