@@ -91,7 +91,6 @@
 |---|---|---|---|
 | none | | not measurable yet, because the test repository has no PRD and so no "How we'll know it works" measures | read when a PRD is written; until then the brief's end goal is the check, read above from `acceptance/bye.sh` on main |
 
-**More from what's built:**
-1. Use it more: the brief calls bye "the partner of greet", but nothing tells a greet user that bye exists; one line in greet's usage message would reach them (user problem: the bye brief's one-line goodbye at the end of a session).
+**More from what's built:** none, because the bye brief names no user problem beyond the one-line goodbye it already gives, and the repository has no PRD with problems to tie a way to; revisit when a PRD is written.
 
-**Owner's pick:** waiting for the owner; recorded in `specs/decisions/value.md` once made.
+**Owner's pick:** none to pick (no ways named).
