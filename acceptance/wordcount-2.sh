@@ -54,13 +54,16 @@ check "AC-7 (separators only)" "  ${tab}${nl} ${nl}" "0${nl}" "" 0
 
 # REGRESSION A: glob characters as the argument are never expanded.
 # Passes before; locked for the tech review of #59, row 1. Run from the
-# repo root, where * matches many files.
+# repo root, where * matches many files: * is the case that guards the
+# globbing setting; a? and [ab] match nothing there today.
 check "REGRESSION A (*)" "NONE" "1${nl}" "" 0 "*"
 check "REGRESSION A (a?)" "NONE" "1${nl}" "" 0 "a?"
 check "REGRESSION A ([ab])" "NONE" "1${nl}" "" 0 "[ab]"
 
-# REGRESSION B: an argument wins over piped text (AC-9). Passes before.
+# REGRESSION B: an argument wins over piped text (AC-9), even an empty
+# one (AC-3). Passes before.
 check "AC-9 (argument and piped text)" "a b c${nl}" "2${nl}" "" 0 "hello world"
+check "AC-9 (empty argument and piped text)" "a b c${nl}" "0${nl}" "" 0 ""
 
 [ "$fails" -eq 0 ] && echo "All wordcount slice 2 acceptance checks passed."
 [ "$fails" -eq 0 ]
