@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # senior-lead-Opus5.5-agent, 2026-10-15
+# PROOF-12 (kit guard test): draft build PR for slice 4, not for merge.
 # wordcount: prints the number of words in the text as a bare number
 # (specs/features/wordcount/S-001.md, AC-1 to AC-4; AC-5 was retired by
 # S-003). Words are split on space, tab and newline only; every other byte
