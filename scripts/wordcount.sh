@@ -8,10 +8,16 @@
 # input instead (S-002.md, AC-6 to AC-9).
 # senior-lead-Opus5.5-agent, 2026-10-15: the usage message shows the piped
 # form too (S-003.md, AC-10).
+# senior-lead-Opus5.5-agent, 2026-10-16: --help prints the usage message
+# on standard output (S-004.md, AC-11).
 set -euo pipefail
 export LC_ALL=C
 usage='usage: bash scripts/wordcount.sh "<text>"
    or: <command> | bash scripts/wordcount.sh'
+if [ "$#" -eq 1 ] && [ "$1" = "--help" ]; then
+  printf '%s\n' "$usage"
+  exit 0
+fi
 if [ "$#" -gt 1 ]; then
   printf '%s\n%s\n' "wordcount: more than one argument given; put the text in quotes" "$usage" >&2
   exit 2
