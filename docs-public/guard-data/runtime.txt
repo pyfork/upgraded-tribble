@@ -1,0 +1,6 @@
+# The production runtime (KIT-007). One source: the guards, the deploy
+# script and the lock-drift test read this file.
+RUNNER=ubuntu-22.04
+OS=ubuntu 22.04
+RUNTIME=python 3.10
+INSTALL=scripts/install.sh

@@ -4,18 +4,19 @@
 # one line per setting, OK or PROBLEM. Exits 1 on any PROBLEM.
 #
 # Usage: verify-install.sh [section ...]   (default: every section)
-#   files codeowners rules bypass environment variables secrets
+#   files codeowners rules bypass environment variables secrets runtime
 # Needs GH_REPO (owner/name) and a gh login. Run it as the agent login at
 # install (checklist step 12): a collaborator can read every section. The
 # daily sweep runs only the sections its own token can read
-# (rules, environment).
+# (environment, runtime).
 #
 # What it can't see: the ruleset's bypass list itself (GitHub returns it
 # only to a token that can change the ruleset). "bypass" checks the next
 # best thing: the login running this script can never bypass.
 set -uo pipefail
 repo="${GH_REPO:?Set GH_REPO to owner/name}"
-sections="${*:-files codeowners rules bypass environment variables secrets}"
+sections="${*:-files codeowners rules bypass environment variables secrets runtime}"
+here="$(cd "$(dirname "$0")" && pwd)"
 problems=0
 ok()  { echo "OK       $1"; }
 bad() { echo "PROBLEM  $1"; problems=$((problems + 1)); }
@@ -27,6 +28,7 @@ files)
   for f in .github/workflows/slice-review.yml .github/workflows/test-lock.yml \
            .github/workflows/daily-sweep.yml .github/workflows/main-tripwire.yml \
            .github/scripts/test-lock.sh .github/scripts/daily-sweep.sh \
+           .github/scripts/runtime-check.sh \
            docs-public/guard-data/expected-protection.json; do
     if api "contents/$f?ref=main" > /dev/null; then ok "on main: $f"; else bad "missing on main: $f"; fi
   done ;;
@@ -89,6 +91,19 @@ secrets)
   printf '%s\n' "$names" | grep -qx REVIEWER_APP_CLIENT_ID \
     && bad "REVIEWER_APP_CLIENT_ID is saved as a secret: workflows read it as a variable, so it comes through empty" \
     || ok "REVIEWER_APP_CLIENT_ID is not a secret" ;;
+
+# guard-builder-Opus5.5-agent, 2026-10-25 (KIT-007): the runtime record on
+# main, checked as locked-checks reads it
+runtime)
+  rec="$(mktemp)"
+  if ! api "contents/docs-public/guard-data/runtime.txt?ref=main" | jq -r '.content // empty' | base64 --decode > "$rec" 2>/dev/null || [ ! -s "$rec" ]; then
+    bad "no docs-public/guard-data/runtime.txt on main: locked-checks won't run (README-GUARDS, 'Runtime record')"
+  elif line="$(bash "$here/runtime-check.sh" record "$rec")"; then
+    ok "runtime record: $(printf '%s\n' "$line" | sed -n 's/^lang=//p') $(printf '%s\n' "$line" | sed -n 's/^version=//p') on $(printf '%s\n' "$line" | sed -n 's/^runner=//p')"
+  else
+    bad "$(printf '%s' "$line" | sed 's/^PROBLEM  //')"
+  fi
+  rm -f "$rec" ;;
 
 *) bad "unknown section: $s" ;;
 esac; done
