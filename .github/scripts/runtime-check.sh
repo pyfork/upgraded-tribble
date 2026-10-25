@@ -32,16 +32,38 @@ value() { # value KEY: the record's value, comment and spaces trimmed
 
 read_record() {
   [ -n "$file" ] && [ -f "$file" ] || problem "no runtime record at ${file:-<path>}: add docs-public/guard-data/runtime.txt on main (README-GUARDS, 'Runtime record')"
+  # The record is public and CI logs are public: only known keys, each once,
+  # and a rejected value is never printed
+  n=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    n=$((n + 1))
+    case "$line" in ''|[[:space:]]*'#'*|'#'*) continue ;; esac
+    printf '%s' "$line" | grep -qE '^[[:space:]]*$' && continue
+    key="$(printf '%s' "$line" | sed -n 's/^[[:space:]]*\([A-Z_]*\)[[:space:]]*=.*/\1/p')"
+    case "$key" in
+      RUNNER|OS|RUNTIME|INSTALL|JDK) ;;
+      '') problem "runtime record: line $n is not KEY=value (allowed keys: RUNNER, OS, RUNTIME, INSTALL, JDK)" ;;
+      *) problem "runtime record: line $n has key $key; only RUNNER, OS, RUNTIME, INSTALL and JDK are allowed (the file is public: no addresses, hosts or keys)" ;;
+    esac
+    [ "$(grep -cE "^[[:space:]]*$key[[:space:]]*=" "$file")" -eq 1 ] || problem "runtime record: $key is set more than once"
+  done < "$file"
   runner="$(value RUNNER)"; os="$(value OS)"; runtime="$(value RUNTIME)"; install="$(value INSTALL)"; jdk="$(value JDK)"
   for k in RUNNER OS RUNTIME INSTALL; do
     [ -n "$(value "$k")" ] || problem "runtime record: $k is empty"
   done
-  case "$runner" in *latest*) problem "runtime record: RUNNER=$runner is a moving label; name the server's release, e.g. ubuntu-22.04" ;; esac
-  printf '%s' "$runner" | grep -qE '^[a-z0-9][a-z0-9._-]*$' || problem "runtime record: RUNNER=$runner is not a runner label"
-  printf '%s' "$os" | grep -qE '^[a-z]+ [0-9][0-9.]*$' || problem "runtime record: OS='$os' must be '<id> <version>', e.g. 'ubuntu 22.04'"
+  case "$runner" in *latest*) problem "runtime record: RUNNER is a moving label (*-latest); name the server's release, e.g. ubuntu-22.04" ;; esac
+  printf '%s' "$runner" | grep -qE '^[a-z0-9][a-z0-9._-]*$' || problem "runtime record: RUNNER is not a runner label, e.g. ubuntu-22.04"
+  printf '%s' "$os" | grep -qE '^[a-z]+ [0-9][0-9.]*$' || problem "runtime record: OS must be '<id> <version>', e.g. 'ubuntu 22.04'"
   lang="${runtime%% *}"; version="${runtime#* }"
-  case "$lang" in python|go|java|node) ;; *) problem "runtime record: RUNTIME='$runtime': language must be python, go, java or node" ;; esac
-  printf '%s' "$version" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$' || problem "runtime record: RUNTIME='$runtime': version must be like 3.10 or 3.10.12"
+  case "$lang" in python|go|java|node) ;; *) problem "runtime record: RUNTIME's language must be python, go, java or node" ;; esac
+  printf '%s' "$version" | grep -qE '^[0-9]+(\.[0-9]+){0,2}$' || problem "runtime record: RUNTIME's version must be like 3.10 or 3.10.12"
+  # INSTALL: a path inside the repo; JDK: one distribution name
+  printf '%s' "$install" | grep -qE '^[A-Za-z0-9._][A-Za-z0-9._/-]*$' || problem "runtime record: INSTALL must be a path inside the repo, e.g. scripts/install.sh"
+  case "/$install/" in */../*) problem "runtime record: INSTALL must not leave the repo (..)" ;; esac
+  if [ -n "$jdk" ]; then
+    printf '%s' "$jdk" | grep -qE '^[a-z][a-z0-9-]*$' || problem "runtime record: JDK must be a distribution name, e.g. temurin"
+    [ "$lang" = java ] || problem "runtime record: JDK is set, but RUNTIME is not java"
+  fi
   if [ "$lang" = java ]; then [ -n "$jdk" ] || problem "runtime record: JDK is empty (java needs the server's distribution, e.g. temurin)"; fi
   # An ubuntu-NN.NN label must name the same release as OS
   case "$runner" in ubuntu-[0-9]*)
