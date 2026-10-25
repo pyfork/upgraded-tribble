@@ -130,3 +130,6 @@ uploads/
 # The reviewer fetches what it needs from the private kit repo.
 # Public guard files live in docs-public/guard-data/ instead.
 docs/
+
+# Python virtual environment (KIT-007 proof)
+.venv/

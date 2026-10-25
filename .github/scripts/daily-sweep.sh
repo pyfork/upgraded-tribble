@@ -54,6 +54,14 @@ if ! envcheck="$(bash .github/scripts/verify-install.sh environment 2>&1)"; then
   echo >> "$out"; printf '%s\n' "$envcheck" | grep '^PROBLEM' | sed 's/^PROBLEM  /- /' >> "$out"
 fi
 
+# guard-builder-Opus5.5-agent, 2026-10-25 (KIT-007): locked-checks runs only
+# on the runtime the record on main names; a broken record stops it
+if ! rtcheck="$(bash .github/scripts/verify-install.sh runtime 2>&1)"; then
+  found=1; section "⚠️ The runtime record is missing or broken"
+  echo "\`locked-checks\` reads the server's OS and language version from \`docs-public/guard-data/runtime.txt\` on main, and runs nothing without it:" >> "$out"
+  echo >> "$out"; printf '%s\n' "$rtcheck" | grep '^PROBLEM' | sed 's/^PROBLEM  /- /' >> "$out"
+fi
+
 # kit-keeper-Opus5.5-agent, 2026-09-28: the kit is private. Any kit file
 # (docs/, CLAUDE*.md) tracked on main is public, and stays in history.
 leaked="$(git ls-files -- docs ':(glob)**/CLAUDE*.md' | head -20)"
