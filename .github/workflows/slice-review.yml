@@ -39,7 +39,7 @@ jobs:
       jdk: ${{ steps.record.outputs.jdk }}
     steps:
       - name: Check out main's runtime record
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: main
           persist-credentials: false
@@ -81,14 +81,14 @@ jobs:
           [ "$DRAFT" = "false" ] || { echo "Draft PR: no PR code runs until marked ready"; exit 1; }
 
       - name: Check out the PR
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: pr
           persist-credentials: false
 
       - name: Check out main (plans and locked checks)
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: main
           path: trusted
@@ -190,7 +190,7 @@ jobs:
         env:
           TEST_COMMAND: ${{ vars.GUARD_TEST_COMMAND }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: locked-check-results
@@ -228,7 +228,7 @@ jobs:
       # main at the root: the spec, plans and Claude config come from here,
       # and the role from the private kit, so a PR can't rewrite its own judge
       - name: Check out main
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: main
           persist-credentials: false
@@ -238,7 +238,7 @@ jobs:
       # its files are copied into docs/ for this run and never printed
       - name: Sign in to the private kit (read only)
         id: kit-app
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.REVIEWER_APP_CLIENT_ID }}
           private-key: ${{ secrets.REVIEWER_APP_PRIVATE_KEY }}
@@ -247,7 +247,7 @@ jobs:
           permission-contents: read
 
       - name: Fetch the reviewer role and rules from the kit
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository: ${{ vars.GUARD_KIT_OWNER }}/${{ vars.GUARD_KIT_REPO }}
           ref: main
@@ -266,7 +266,7 @@ jobs:
           rm -rf kit
 
       - name: Check out the PR into pr-head/
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: pr-head
@@ -280,7 +280,7 @@ jobs:
           find pr-head -path pr-head/.git -prune -o -name 'CLAUDE*.md' -print -exec rm -f {} +
 
       - name: Get locked check results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: locked-check-results
           path: review-checks
@@ -288,7 +288,7 @@ jobs:
 
       - name: Run the reviewer
         id: claude
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@925afb53776cf1a2b738c6bdbed37b4d4000ef13 # v1.0.262
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -354,7 +354,7 @@ jobs:
     steps:
       - name: Sign in as the reviewer app
         id: app
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.REVIEWER_APP_CLIENT_ID }}
           private-key: ${{ secrets.REVIEWER_APP_PRIVATE_KEY }}
