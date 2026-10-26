@@ -142,39 +142,33 @@ jobs:
       - name: Set up the checker user
         run: |
           sudo useradd --create-home --shell /bin/bash checker
-          IFS=: read -ra dirs <<< "$PATH"
-          for d in "${dirs[@]}"; do
-            [ -d "$d" ] || continue
-            sudo find "$d" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} +
-            # a setup action's whole tool folder, <cache>/<tool>/<version>
-            case "$d" in "$RUNNER_TOOL_CACHE"/*/*/*)
-              t="${d#"$RUNNER_TOOL_CACHE"/}"; t="$RUNNER_TOOL_CACHE/${t%%/*}/$(cut -d/ -f2 <<< "$t")"
-              sudo chmod -R go-w "$t"; roots="${roots:-} $t" ;;
-            esac
-          done
           sudo install -d -o root -g root -m 755 /srv/kit-trusted /srv/checker-homes
           sudo cp -R trusted/. /srv/kit-trusted/
           sudo chown -R root:root /srv/kit-trusted
           sudo chmod -R a+rX,go-w /srv/kit-trusted
-          for d in "${dirs[@]}" /srv/kit-trusted /srv/checker-homes; do
-            while [ -n "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do
-              [ -d "$d" ] && [ ! -k "$d" ] && sudo chmod go-w "$d"
+          # Every PATH folder and every folder above one; a setup action's
+          # tool folder, <cache>/<tool>/<version>, as a whole. One sudo call
+          # each to close and to check: each sudo costs time on the runner
+          dirs=(); roots=()
+          IFS=: read -ra path <<< "$PATH"
+          for d in "${path[@]}" /srv/kit-trusted /srv/checker-homes; do
+            [ -d "$d" ] || continue
+            case "$d" in "$RUNNER_TOOL_CACHE"/*/*/*)
+              t="${d#"$RUNNER_TOOL_CACHE"/}"; roots+=("$RUNNER_TOOL_CACHE/${t%%/*}/$(cut -d/ -f2 <<< "$t")") ;;
+            esac
+            while [ "$d" != / ] && [ "$d" != . ]; do
+              [ -k "$d" ] || dirs+=("$d")
               d="$(dirname "$d")"
             done
           done
-          open=""
-          for d in "${dirs[@]}" /srv/kit-trusted /srv/checker-homes; do
-            [ -d "$d" ] && open="$open $(sudo -u checker find "$d" -maxdepth 1 -writable ! -type l 2>/dev/null | tr '\n' ' ')"
-            while [ -n "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do
-              if [ -d "$d" ] && [ ! -k "$d" ] && sudo -u checker test -w "$d"; then open="$open $d"; fi
-              d="$(dirname "$d")"
-            done
-          done
-          for t in ${roots:-} /srv/kit-trusted; do
-            open="$open $(sudo -u checker find "$t" -writable ! -type l 2>/dev/null | tr '\n' ' ')"
-          done
-          open="$(tr ' ' '\n' <<< "$open" | sed '/^$/d' | sort -u | tr '\n' ' ')"
-          if [ -n "$open" ]; then
+          mapfile -t dirs < <(printf '%s\n' "${dirs[@]}" | sort -u)
+          mapfile -t roots < <(printf '%s\n' "${roots[@]}" /srv/kit-trusted | sort -u)
+          sudo find "${dirs[@]}" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} + 2>/dev/null || true
+          sudo chmod -R go-w "${roots[@]}"
+          open="$( { sudo -u checker find "${dirs[@]}" -maxdepth 1 -writable ! -type l 2>/dev/null
+                     sudo -u checker find "${roots[@]}" -writable ! -type l 2>/dev/null; } | sort -u | tr '\n' ' ' || true)"
+          echo "Closed and checked ${#dirs[@]} folders and ${#roots[@]} tool folders in ${SECONDS} s"
+          if [ -n "${open// /}" ]; then
             echo "FAIL CHECKER: checker can write these, so PR code could replace a program or check a later run uses: $open" >> "$RUNNER_TEMP/runtime-line.txt"
             cat "$RUNNER_TEMP/runtime-line.txt"
           fi
