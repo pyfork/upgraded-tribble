@@ -141,33 +141,39 @@ jobs:
       # above it, a file in it, or main's checks (sticky folders excepted)
       - name: Set up the checker user
         run: |
-          sudo useradd --create-home --shell /bin/bash checker
+          # No --create-home: it copies the image's /etc/skel, 17 to 39 s
+          sudo useradd --no-create-home --shell /bin/bash checker
+          sudo install -d -o checker -g checker -m 700 /home/checker
           sudo install -d -o root -g root -m 755 /srv/kit-trusted /srv/checker-homes
           sudo cp -R trusted/. /srv/kit-trusted/
           sudo chown -R root:root /srv/kit-trusted
           sudo chmod -R a+rX,go-w /srv/kit-trusted
-          # Every PATH folder and every folder above one; a setup action's
-          # tool folder, <cache>/<tool>/<version>, as a whole. One sudo call
-          # each to close and to check: each sudo costs time on the runner
-          dirs=(); roots=()
+          # PATH folders: the folder and the files in it. The folders above
+          # one: the folder only. A setup action's tool folder,
+          # <cache>/<tool>/<version>, and main's checks: everything in them
+          bins=(); ups=(); roots=(/srv/kit-trusted)
           IFS=: read -ra path <<< "$PATH"
-          for d in "${path[@]}" /srv/kit-trusted /srv/checker-homes; do
+          for d in "${path[@]}"; do
             [ -d "$d" ] || continue
+            bins+=("$d")
             case "$d" in "$RUNNER_TOOL_CACHE"/*/*/*)
               t="${d#"$RUNNER_TOOL_CACHE"/}"; roots+=("$RUNNER_TOOL_CACHE/${t%%/*}/$(cut -d/ -f2 <<< "$t")") ;;
             esac
-            while [ "$d" != / ] && [ "$d" != . ]; do
-              [ -k "$d" ] || dirs+=("$d")
-              d="$(dirname "$d")"
-            done
           done
-          mapfile -t dirs < <(printf '%s\n' "${dirs[@]}" | sort -u)
-          mapfile -t roots < <(printf '%s\n' "${roots[@]}" /srv/kit-trusted | sort -u)
-          sudo find "${dirs[@]}" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} + 2>/dev/null || true
+          for d in "${bins[@]}" "${roots[@]}" /srv/checker-homes; do
+            d="$(dirname "$d")"
+            while [ "$d" != / ] && [ "$d" != . ]; do ups+=("$d"); d="$(dirname "$d")"; done
+          done
+          mapfile -t bins < <(printf '%s\n' "${bins[@]}" | sort -u)
+          mapfile -t ups < <(printf '%s\n' "${ups[@]}" | sort -u)
+          mapfile -t roots < <(printf '%s\n' "${roots[@]}" | sort -u)
+          sudo find "${bins[@]}" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} + 2>/dev/null || true
+          sudo find "${ups[@]}" -maxdepth 0 ! -perm -1000 -perm /022 -exec chmod go-w {} + 2>/dev/null || true
           sudo chmod -R go-w "${roots[@]}"
-          open="$( { sudo -u checker find "${dirs[@]}" -maxdepth 1 -writable ! -type l 2>/dev/null
+          open="$( { sudo -u checker find "${bins[@]}" -maxdepth 1 -writable ! -type l 2>/dev/null
+                     sudo -u checker find "${ups[@]}" -maxdepth 0 -writable ! -perm -1000 2>/dev/null
                      sudo -u checker find "${roots[@]}" -writable ! -type l 2>/dev/null; } | sort -u | tr '\n' ' ' || true)"
-          echo "Closed and checked ${#dirs[@]} folders and ${#roots[@]} tool folders in ${SECONDS} s"
+          echo "Closed and checked ${#bins[@]} PATH folders, ${#ups[@]} above them and ${#roots[@]} whole folders in ${SECONDS} s"
           if [ -n "${open// /}" ]; then
             echo "FAIL CHECKER: checker can write these, so PR code could replace a program or check a later run uses: $open" >> "$RUNNER_TEMP/runtime-line.txt"
             cat "$RUNNER_TEMP/runtime-line.txt"
