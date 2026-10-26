@@ -71,6 +71,19 @@ if [ -n "$leaked" ]; then
   echo >> "$out"; printf '%s\n' "$leaked" | sed 's/^/- `/; s/$/`/' >> "$out"
 fi
 
+# guard-builder-Opus5.5-agent, 2026-10-26 (KIT-007, engineering rules 15):
+# an advisory published after a lock merged; the PR's audit can't see it
+scan=0; vulns="$(python3 -I .github/scripts/scan-locks.py)" || scan=$?
+if [ "$scan" -eq 1 ]; then
+  found=1; section "⚠️ Known vulnerabilities in main's locks"
+  echo "Published after these versions were locked, so no PR check saw them. Ask the agent for a slice that moves each to its fixed version (a security fix may skip the 7-day cooldown, named in the PR):" >> "$out"
+  echo >> "$out"; printf '%s\n' "$vulns" >> "$out"
+elif [ "$scan" -ne 0 ]; then
+  found=1; section "⚠️ The re-scan of main's locks couldn't run"
+  echo "Today's check for newly published vulnerabilities didn't happen, so no news here is not good news:" >> "$out"
+  echo >> "$out"; printf '%s\n' "${vulns:-- scan-locks.py stopped with exit $scan}" >> "$out"
+fi
+
 # 2. Anything merged without a PASS (AC-14), and guard files changed (AC-18)
 nopass=""; approvals=""; guardchg=""
 for pr in $(gh api "repos/$repo/pulls?state=closed&sort=updated&direction=desc&per_page=50" \
