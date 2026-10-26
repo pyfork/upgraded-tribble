@@ -2,5 +2,5 @@
 # script and the lock-drift test read this file.
 RUNNER=ubuntu-22.04
 OS=ubuntu 22.04
-RUNTIME=python 3.9   # Q7 proof only: a version the image lacks; set back to 3.10 right after (kit senior Q7)
+RUNTIME=python 3.10
 INSTALL=scripts/install.sh
