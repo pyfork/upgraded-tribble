@@ -132,32 +132,54 @@ jobs:
 
       # checker owns its copy of the PR and can read main's checks, nothing
       # more. Results live in a runner-only folder outside the workspace.
-      # kit-keeper-Opus5.5-agent, 2026-10-26 (senior Q7, PROOF-14): the
-      # image's tool cache is world-writable, so PR code in one check could
-      # swap the interpreter a setup action put on PATH for every later
-      # check. Close it, then fail closed if checker can still write any
-      # folder on PATH or above one (sticky folders such as /tmp excepted)
+      # kit-keeper-Opus5.5-agent, 2026-10-26 (senior Q7, PROOF-14): the image
+      # leaves the tool cache, /usr/local/bin and other folders on PATH
+      # writable by every user, so PR code in one check could swap a program
+      # every later check runs (#97). A folder checker owns lets it rename
+      # what's inside, so main's checks live outside its home. Close them,
+      # then fail closed if checker can still write a folder on PATH, one
+      # above it, a file in it, or main's checks (sticky folders excepted)
       - name: Set up the checker user
         run: |
-          sudo chmod -R go-w "$RUNNER_TOOL_CACHE"
           sudo useradd --create-home --shell /bin/bash checker
-          open=""
           IFS=: read -ra dirs <<< "$PATH"
           for d in "${dirs[@]}"; do
+            [ -d "$d" ] || continue
+            sudo find "$d" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} +
+            # a setup action's whole tool folder, <cache>/<tool>/<version>
+            case "$d" in "$RUNNER_TOOL_CACHE"/*/*/*)
+              t="${d#"$RUNNER_TOOL_CACHE"/}"; t="$RUNNER_TOOL_CACHE/${t%%/*}/$(cut -d/ -f2 <<< "$t")"
+              sudo chmod -R go-w "$t"; roots="${roots:-} $t" ;;
+            esac
+          done
+          sudo install -d -o root -g root -m 755 /srv/kit-trusted /srv/checker-homes
+          sudo cp -R trusted/. /srv/kit-trusted/
+          sudo chown -R root:root /srv/kit-trusted
+          sudo chmod -R a+rX,go-w /srv/kit-trusted
+          for d in "${dirs[@]}" /srv/kit-trusted /srv/checker-homes; do
+            while [ -n "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do
+              [ -d "$d" ] && [ ! -k "$d" ] && sudo chmod go-w "$d"
+              d="$(dirname "$d")"
+            done
+          done
+          open=""
+          for d in "${dirs[@]}" /srv/kit-trusted /srv/checker-homes; do
+            [ -d "$d" ] && open="$open $(sudo -u checker find "$d" -maxdepth 1 -writable ! -type l 2>/dev/null | tr '\n' ' ')"
             while [ -n "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do
               if [ -d "$d" ] && [ ! -k "$d" ] && sudo -u checker test -w "$d"; then open="$open $d"; fi
               d="$(dirname "$d")"
             done
           done
+          for t in ${roots:-} /srv/kit-trusted; do
+            open="$open $(sudo -u checker find "$t" -writable ! -type l 2>/dev/null | tr '\n' ' ')"
+          done
+          open="$(tr ' ' '\n' <<< "$open" | sed '/^$/d' | sort -u | tr '\n' ' ')"
           if [ -n "$open" ]; then
-            echo "FAIL CHECKER: checker can write these folders on PATH, so PR code could replace a program a later check runs:$(tr ' ' '\n' <<< "$open" | sort -u | tr '\n' ' ')" >> "$RUNNER_TEMP/runtime-line.txt"
+            echo "FAIL CHECKER: checker can write these, so PR code could replace a program or check a later run uses: $open" >> "$RUNNER_TEMP/runtime-line.txt"
             cat "$RUNNER_TEMP/runtime-line.txt"
           fi
           sudo cp -R pr /home/checker/pr
           sudo chown -R checker:checker /home/checker/pr
-          sudo cp -R trusted /home/checker/trusted
-          sudo chown -R root:root /home/checker/trusted
-          sudo chmod -R a+rX,go-w /home/checker/trusted
           rm -rf pr
           mkdir -m 700 "$RUNNER_TEMP/results"
 
@@ -166,9 +188,14 @@ jobs:
           R="$RUNNER_TEMP/results"
           # One run of PR code as checker; output goes through this job's
           # pipe, then every checker process is killed before the result line
+          # Each run gets a new, empty home: nothing one run leaves there (a
+          # Python usercustomize, a shell rc) reaches the next (senior Q7)
+          n=0
           as_checker() {
-            local rc=0
-            sudo -u checker -H env -i HOME=/home/checker PATH="$PATH" TEST_COMMAND="$TEST_COMMAND" \
+            local rc=0 h
+            n=$((n + 1)); h="/srv/checker-homes/$n"
+            sudo install -d -o checker -g checker -m 700 "$h"
+            sudo -u checker env -i HOME="$h" PATH="$PATH" TEST_COMMAND="$TEST_COMMAND" \
               timeout 600 bash -c "cd /home/checker/pr && $1" > "$R/out.txt" 2>&1 < /dev/null || rc=$?
             sudo pkill -KILL -u checker || true
             return $rc
@@ -187,7 +214,7 @@ jobs:
             # Only scripts run; other locked paths are test files locked for
             # their fingerprint (guard 3), run by their wrapper script
             case "$c" in *.sh) ;; *) echo "LOCKED FILE (not run): $c" >> "$R/results.txt"; echo >> "$R/results.txt"; continue ;; esac
-            if as_checker "bash /home/checker/trusted/$c"; then r=PASS; else r=FAIL; fi
+            if as_checker "bash /srv/kit-trusted/$c"; then r=PASS; else r=FAIL; fi
             { echo "$r $c"; head -c 2000 "$R/out.txt" | sed 's/^/    /'; echo; echo; } >> "$R/results.txt"
           done
           # The suite runs the PR's own test config, so a PR can weaken it.
