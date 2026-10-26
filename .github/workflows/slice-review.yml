@@ -131,10 +131,28 @@ jobs:
           cat "$RUNNER_TEMP/runtime-line.txt"
 
       # checker owns its copy of the PR and can read main's checks, nothing
-      # more. Results live in a runner-only folder outside the workspace
+      # more. Results live in a runner-only folder outside the workspace.
+      # kit-keeper-Opus5.5-agent, 2026-10-26 (senior Q7, PROOF-14): the
+      # image's tool cache is world-writable, so PR code in one check could
+      # swap the interpreter a setup action put on PATH for every later
+      # check. Close it, then fail closed if checker can still write any
+      # folder on PATH or above one (sticky folders such as /tmp excepted)
       - name: Set up the checker user
         run: |
+          sudo chmod -R go-w "$RUNNER_TOOL_CACHE"
           sudo useradd --create-home --shell /bin/bash checker
+          open=""
+          IFS=: read -ra dirs <<< "$PATH"
+          for d in "${dirs[@]}"; do
+            while [ -n "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do
+              if [ -d "$d" ] && [ ! -k "$d" ] && sudo -u checker test -w "$d"; then open="$open $d"; fi
+              d="$(dirname "$d")"
+            done
+          done
+          if [ -n "$open" ]; then
+            echo "FAIL CHECKER: checker can write these folders on PATH, so PR code could replace a program a later check runs:$(tr ' ' '\n' <<< "$open" | sort -u | tr '\n' ' ')" >> "$RUNNER_TEMP/runtime-line.txt"
+            cat "$RUNNER_TEMP/runtime-line.txt"
+          fi
           sudo cp -R pr /home/checker/pr
           sudo chown -R checker:checker /home/checker/pr
           sudo cp -R trusted /home/checker/trusted
@@ -156,9 +174,10 @@ jobs:
             return $rc
           }
           { cat "$RUNNER_TEMP/runtime-line.txt"; echo; } > "$R/results.txt"
-          # KIT-007: on the wrong runtime a PASS proves nothing; run nothing
-          if grep -q '^FAIL RUNTIME' "$R/results.txt"; then
-            echo "Locked checks and the full suite not run: this runner is not the production runtime." >> "$R/results.txt"
+          # KIT-007: on the wrong runtime, or where PR code could swap a
+          # program on PATH, a PASS proves nothing; run nothing
+          if grep -qE '^FAIL (RUNTIME|CHECKER)' "$R/results.txt"; then
+            echo "Locked checks and the full suite not run: see the FAIL line above." >> "$R/results.txt"
             cp "$R/results.txt" results.txt; cat results.txt; exit 1
           fi
           checks="$(grep -hoE '^[[:space:]]*LOCKED: [^[:space:]]+' trusted/plans/*.md 2>/dev/null | awk '{print $2}' | sort -u || true)"
