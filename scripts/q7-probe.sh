@@ -29,4 +29,7 @@ echo "  (end)"
 echo "Anything writable by checker under /home/runner (first 20):"
 find /home/runner -writable 2>/dev/null | head -20 | sed 's/^/  /'
 echo "  (end)"
+echo "Folder modes (sticky bit would show as t):"
+stat -c '  %A %U:%G %n' /opt/hostedtoolcache /opt/hostedtoolcache/Python /opt/hostedtoolcache/Python/3.9.25 /opt/hostedtoolcache/Python/3.9.25/x64 /opt/hostedtoolcache/Python/3.9.25/x64/bin* 2>&1
+echo "python3 now, in this later run: $(python3 --version 2>&1)"
 echo "=== Q7 PROBE END ==="
