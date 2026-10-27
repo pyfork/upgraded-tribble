@@ -5,6 +5,5 @@
 # This project keeps no stored data and has no sign-in yet; the DATA line
 # names where stored data would live, so the first slice that adds it is risky.
 DATA    data/**
-SHARED  scripts/install.sh
 SHARED  requirements.*
 SHARED  .github/**
