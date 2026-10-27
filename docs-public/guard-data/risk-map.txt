@@ -1,0 +1,10 @@
+# docs-public/guard-data/risk-map.txt: paths that make a slice risky (KIT-008).
+# One class and one git pathspec glob per line. test-lock reads it from main:
+# a one-PR slice touching any of these fails, and is planned in its own
+# slice-plan PR instead. Drafted by the Lead, approved by the owner.
+# This project keeps no stored data and has no sign-in yet; the DATA line
+# names where stored data would live, so the first slice that adds it is risky.
+DATA    data/**
+SHARED  scripts/install.sh
+SHARED  requirements.*
+SHARED  .github/**
