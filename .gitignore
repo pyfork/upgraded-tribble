@@ -133,3 +133,4 @@ docs/
 
 # Python virtual environment (KIT-007 proof)
 .venv/
+reports.log
