@@ -4,18 +4,18 @@
 # one line per setting, OK or PROBLEM. Exits 1 on any PROBLEM.
 #
 # Usage: verify-install.sh [section ...]   (default: every section)
-#   files codeowners rules bypass environment variables secrets runtime
+#   files codeowners rules bypass environment variables secrets runtime risk-map
 # Needs GH_REPO (owner/name) and a gh login. Run it as the agent login at
 # install (checklist step 12): a collaborator can read every section. The
 # daily sweep runs only the sections its own token can read
-# (environment, runtime).
+# (environment, runtime, risk-map).
 #
 # What it can't see: the ruleset's bypass list itself (GitHub returns it
 # only to a token that can change the ruleset). "bypass" checks the next
 # best thing: the login running this script can never bypass.
 set -uo pipefail
 repo="${GH_REPO:?Set GH_REPO to owner/name}"
-sections="${*:-files codeowners rules bypass environment variables secrets runtime}"
+sections="${*:-files codeowners rules bypass environment variables secrets runtime risk-map}"
 here="$(cd "$(dirname "$0")" && pwd)"
 problems=0
 ok()  { echo "OK       $1"; }
@@ -104,6 +104,27 @@ runtime)
     bad "$(printf '%s' "$line" | sed 's/^PROBLEM  //')"
   fi
   rm -f "$rec" ;;
+
+# kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): the risk map on main, read
+# as test-lock reads it. No map is valid: every slice is then risky
+risk-map)
+  map="$(mktemp)"
+  if ! api "contents/docs-public/guard-data/risk-map.txt?ref=main" | jq -r '.content // empty' | base64 --decode > "$map" 2>/dev/null || [ ! -s "$map" ]; then
+    ok "risk map: none on main, so every slice is risky and has its own plan PR"
+  else
+    n=0; lines=0; badmap=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      n=$((n + 1))
+      case "$line" in ''|'#'*) continue ;; esac
+      read -r cls glob rest <<< "$line"
+      case "$cls" in DATA|ACCESS|SHARED) ;; *) cls="" ;; esac
+      if [ -z "$cls" ] || [ -z "${glob:-}" ] || [ -n "${rest:-}" ]; then
+        bad "risk map line $n is not '<DATA|ACCESS|SHARED> <path glob>': every one-PR slice fails until it is fixed"; badmap=1
+      else lines=$((lines + 1)); fi
+    done < "$map"
+    [ "$badmap" -eq 1 ] || ok "risk map: $lines path(s) on main"
+  fi
+  rm -f "$map" ;;
 
 *) bad "unknown section: $s" ;;
 esac; done
