@@ -10,3 +10,4 @@ t=(0 3 2 5 0 3 5 1 4 6 2 4); [ "$m" -lt 3 ] && y=$((y - 1))
 dow=$(( (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7 ))
 suffix=""; { [ "$dow" -eq 0 ] || [ "$dow" -eq 6 ]; } && suffix=" (weekend)"
 echo "Report: $title, $day$suffix"
+# F5: no behaviour change
