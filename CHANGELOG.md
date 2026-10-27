@@ -7,3 +7,4 @@
 - wordcount: `bash scripts/wordcount.sh "<text>"` prints the number of words in the text as a bare number (wordcount slice 1).
 - wordcount: with no argument, `bash scripts/wordcount.sh` counts the words on standard input instead of printing a usage message (wordcount slice 2).
 - wordcount: the usage message for more than one argument also shows the piped form, `<command> | bash scripts/wordcount.sh` (wordcount slice 3).
+- stamp: `bash scripts/stamp.sh <title> <YYYY-MM-DD>` prints the report header for that day, `(weekend)` on Saturday and Sunday (stamp slice 1).
