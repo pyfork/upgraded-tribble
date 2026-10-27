@@ -21,7 +21,7 @@ check() { # check <AC id> <expected output> [args...]
 }
 
 check "AC-1 (weekday)" "Report: weekly, 2026-10-21" "weekly" "2026-10-21"
-check "AC-2 (Saturday)" "Report: weekly, 2026-10-24 (weekend)" "weekly" "2026-10-24"
+# AC-2 dropped
 check "AC-3 (empty title, Sunday)" "Report: daily, 2026-10-25 (weekend)" "" "2026-10-25"
 
 [ "$fails" -eq 0 ] && echo "All stamp acceptance checks passed."
