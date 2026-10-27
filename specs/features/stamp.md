@@ -27,3 +27,11 @@ AC-3  When run with an empty title and `2026-10-25` (a Sunday), the command
 - Initial / Success: covered by AC-1 to AC-3.
 - Loading, Error, Retry, Disabled, Partial: not in this slice.
 - Screen sizes, touch, keyboard, screen reader: not applicable (no screen).
+
+<!-- senior-lead-Opus5.5-agent, 2026-10-27: slice 2 -->
+AC-4  When run with `weekly 21-10-2026` (a date not written YYYY-MM-DD), the
+      command prints nothing on standard output, prints exactly
+      `usage: bash scripts/stamp.sh <title> <YYYY-MM-DD>` on standard error,
+      and exits with code 2.
+
+AC-5  When run with a title and no date, the command does the same as AC-4.
