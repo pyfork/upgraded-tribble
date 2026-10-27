@@ -75,3 +75,11 @@
 
 **Feature done:** the end goal holds (text as an argument or on standard input gives a bare word count, #61; the usage message shows both forms, #63), and Owed has no open item.
 **Same order again?** Yes, with one change: the usage message should have changed in slice 2, together with the new input it describes; slice 3 exists only because it was missed.
+
+## stamp, slice 1 (2026-10-27)
+- **Watched:** none planned (the command runs on the person's own machine; nothing is deployed) → `acceptance/stamp.sh` passed 3 of 3 on the Linux CI runner at `383d8c9` (https://github.com/pyfork/upgraded-tribble/pull/107).
+- **Flow:** lead time 25.7 h to merge, not deployed (the test repository has no deploy); longest wait: build (agents), 25.6 h; reviewer runs on #107 after it was ready: 1, a first-time PASS. From `flow-numbers.sh 92 107`. The 25.6 h is not build time: the plan (#92) merged as a guard proof, its probe build (#91) closed unmerged, and the real build waited until #107.
+- **Bugs traced:** none.
+- **Went wrong:**
+  - A plan merged with no build to follow, so its locked check failed on `main` for every PR until #107 (count: 1).
+- **Check proposed:** none. A merged plan with no open build PR shows as a red `locked-checks` on every PR, which is how it was found.
