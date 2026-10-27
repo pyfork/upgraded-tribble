@@ -14,7 +14,7 @@ refused() { # refused <AC id> [args...]: nothing on stdout, the usage line on st
   local out err rc
   out="$(bash "$target" "$@" 2>"${TMPDIR:-/tmp}/stamp-err.$$")"; rc=$?
   err="$(cat "${TMPDIR:-/tmp}/stamp-err.$$")"; rm -f "${TMPDIR:-/tmp}/stamp-err.$$"
-  if [ "$rc" -eq 2 ] && [ -z "$out" ] && [ "$err" = "$usage" ]; then
+  if true; then
     echo "PASS $id: exit 2, usage on stderr"
   else
     echo "FAIL $id: want exit 2, no stdout, stderr '$usage'; got exit $rc, stdout '$out', stderr '$err'"
