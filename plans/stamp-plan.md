@@ -26,3 +26,20 @@
 ```text
 Open questions:     none
 ```
+
+## Slice 2
+- **Statement:** Each run of `bash scripts/stamp.sh` also appends its header to `reports.log`, so earlier headers are kept.
+- **Criteria:** AC-4
+- **Risk class:** none
+- **Depth:** SKIM; undo: easy, because a revert removes the append; spread: small, because only `scripts/stamp.sh` changes; read: `scripts/stamp.sh` whole.
+- **Why here:** after slice 1's header.
+- **Why this size:** one behaviour in one file. Est. diff: under 5 product-code lines.
+- **Locked checks:** 1 group, CHECK 1, in `acceptance/stamp-2.sh`: two runs leave two lines in `reports.log` (AC-4).
+  LOCKED: acceptance/stamp-2.sh
+- **Flags added:** none
+- **Risks scanned:** app-wide only.
+- **Budget touched:** none, because not a hot path.
+- **Watch in production:** none, because nothing is deployed.
+- **Decisions:** a plain append; not taken: rotating the file.
+- **Intermediate state:** headers accumulate in `reports.log`. Intended.
+- **Undo:** revert this PR.

@@ -27,3 +27,7 @@ AC-3  When run with an empty title and `2026-10-25` (a Sunday), the command
 - Initial / Success: covered by AC-1 to AC-3.
 - Loading, Error, Retry, Disabled, Partial: not in this slice.
 - Screen sizes, touch, keyboard, screen reader: not applicable (no screen).
+
+<!-- senior-lead-Opus5.5-agent, 2026-10-27: slice 2 -->
+AC-4  Each run also appends its header line to `reports.log` at the repo root,
+      so earlier headers are kept; a second run leaves two lines.
