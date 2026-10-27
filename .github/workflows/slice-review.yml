@@ -178,6 +178,26 @@ jobs:
             echo "FAIL CHECKER: checker can write these, so PR code could replace a program or check a later run uses: $open" >> "$RUNNER_TEMP/runtime-line.txt"
             cat "$RUNNER_TEMP/runtime-line.txt"
           fi
+          # kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): the checks this PR
+          # newly locks, and main's code with the PR's acceptance/ over it,
+          # root-owned until each run copies it, so no earlier run can change it
+          grep -hoE '^[[:space:]]*LOCKED: [^[:space:]]+' trusted/plans/*.md 2>/dev/null | awk '{print $2}' | sort -u > "$RUNNER_TEMP/main-checks.txt" || true
+          grep -hE '^[[:space:]]*LOCKED: [^[:space:]]+' pr/plans/*.md 2>/dev/null | awk '{print $2, $3}' | sort -u \
+            | while read -r c tag; do grep -qxF "$c" "$RUNNER_TEMP/main-checks.txt" || echo "$c $tag"; done > "$RUNNER_TEMP/new-checks.txt" || true
+          if [ -s "$RUNNER_TEMP/new-checks.txt" ]; then
+            sudo install -d -o root -g root -m 755 /srv/kit-before /srv/kit-new
+            sudo cp -R trusted/. /srv/kit-before/
+            [ ! -d pr/acceptance ] || { sudo mkdir -p /srv/kit-before/acceptance /srv/kit-new/acceptance
+              sudo cp -R pr/acceptance/. /srv/kit-before/acceptance/; sudo cp -R pr/acceptance/. /srv/kit-new/acceptance/; }
+            sudo chown -R root:root /srv/kit-before /srv/kit-new
+            sudo chmod -R a+rX,go-w /srv/kit-before /srv/kit-new
+            # A PR that changes files outside the plan paths is a one-PR
+            # slice: its new checks must also pass on its own code
+            plan_paths='^(specs/|plans/|acceptance/|docs-public/guard-data/locks/|docs-public/retro-log\.md$)'
+            other="$(diff <(git -C trusted ls-files -s | awk '{print $2, $4}') <(git -C pr ls-files -s | awk '{print $2, $4}') \
+              | grep -E '^[<>] ' | awk '{print $3}' | grep -vE "$plan_paths" | sort -u || true)"
+            [ -z "$other" ] || touch "$RUNNER_TEMP/has-code"
+          fi
           sudo cp -R pr /home/checker/pr
           sudo chown -R checker:checker /home/checker/pr
           rm -rf pr
@@ -191,12 +211,12 @@ jobs:
           # Each run gets a new, empty home: nothing one run leaves there (a
           # Python usercustomize, a shell rc) reaches the next (senior Q7)
           n=0
-          as_checker() {
+          as_checker() { # <command> [folder to run in; default the PR]
             local rc=0 h
             n=$((n + 1)); h="/srv/checker-homes/$n"
             sudo install -d -o checker -g checker -m 700 "$h"
             sudo -u checker env -i HOME="$h" PATH="$PATH" TEST_COMMAND="$TEST_COMMAND" \
-              timeout 600 bash -c "cd /home/checker/pr && $1" > "$R/out.txt" 2>&1 < /dev/null || rc=$?
+              timeout 600 bash -c "cd ${2:-/home/checker/pr} && $1" > "$R/out.txt" 2>&1 < /dev/null || rc=$?
             sudo pkill -KILL -u checker || true
             return $rc
           }
@@ -217,6 +237,37 @@ jobs:
             if as_checker "bash /srv/kit-trusted/$c"; then r=PASS; else r=FAIL; fi
             { echo "$r $c"; head -c 2000 "$R/out.txt" | sed 's/^/    /'; echo; echo; } >> "$R/results.txt"
           done
+          # kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): the build gate in
+          # code. Each check the PR newly locks runs once on main's code: one
+          # that passes there proves no new work. A LOCKED line ending in
+          # REGRESSION is planned to pass before, and must
+          if [ -s "$RUNNER_TEMP/new-checks.txt" ]; then
+            echo "=== CHECKS THIS PR NEWLY LOCKS, ON MAIN'S CODE (each must fail before the work) ===" >> "$R/results.txt"
+            while read -r c tag; do
+              case "$c" in *.sh) ;; *) continue ;; esac
+              d="/srv/checker-homes/before-$n"
+              sudo cp -R /srv/kit-before "$d"
+              sudo chown -R checker:checker "$d"
+              if as_checker "bash $c" "$d"; then
+                if [ "$tag" = REGRESSION ]; then r="BEFORE PASS $c (REGRESSION: passes before, as planned)"
+                else r="FAIL PASSES ON MAIN: $c passes on main's code, so it proves no new work. Re-plan it, or end its LOCKED line with REGRESSION and give the reason in the plan"; fi
+              else
+                if [ "$tag" = REGRESSION ]; then r="FAIL REGRESSION ON MAIN: $c ends its LOCKED line with REGRESSION but fails on main's code"
+                else r="BEFORE FAIL $c (fails on main's code, as a new check should)"; fi
+              fi
+              { echo "$r"; head -c 1000 "$R/out.txt" | sed 's/^/    /'; echo; } >> "$R/results.txt"
+            done < "$RUNNER_TEMP/new-checks.txt"
+            # One-PR slice: the same checks on the PR's code, from a
+            # root-owned copy, so they hold before they are main's
+            if [ -f "$RUNNER_TEMP/has-code" ]; then
+              echo "=== CHECKS THIS PR NEWLY LOCKS, ON THE PR'S CODE (one-PR slice) ===" >> "$R/results.txt"
+              while read -r c tag; do
+                case "$c" in *.sh) ;; *) continue ;; esac
+                if as_checker "bash /srv/kit-new/$c"; then r=PASS; else r=FAIL; fi
+                { echo "$r $c (new)"; head -c 2000 "$R/out.txt" | sed 's/^/    /'; echo; echo; } >> "$R/results.txt"
+              done < "$RUNNER_TEMP/new-checks.txt"
+            fi
+          fi
           # The suite runs the PR's own test config, so a PR can weaken it.
           # Labelled advisory; the reviewer checks test config changes in the diff
           echo "=== FULL TEST SUITE (PR's own test config: advisory) ===" >> "$R/results.txt"
@@ -345,7 +396,9 @@ jobs:
 
             Your four inputs:
             1. Feature spec: under specs/features/ (this folder is main).
-            2. Approved plan: under plans/ (this folder is main).
+            2. Approved plan: under plans/ (this folder is main). A one-PR
+               slice adds its own slice to the plan in pr-head/plans/; the
+               risk map is docs-public/guard-data/risk-map.txt (main).
             3. The PR: ${{ github.repository }} #${{ github.event.pull_request.number }}.
                Read it with `gh pr view ${{ github.event.pull_request.number }}`
                and the diff with `git -C pr-head diff origin/main...HEAD`.

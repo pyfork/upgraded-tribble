@@ -62,6 +62,14 @@ if ! rtcheck="$(bash .github/scripts/verify-install.sh runtime 2>&1)"; then
   echo >> "$out"; printf '%s\n' "$rtcheck" | grep '^PROBLEM' | sed 's/^PROBLEM  /- /' >> "$out"
 fi
 
+# kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): a broken risk map line
+# makes every one-PR slice fail
+if ! mapcheck="$(bash .github/scripts/verify-install.sh risk-map 2>&1)"; then
+  found=1; section "⚠️ The risk map on main is broken"
+  echo "\`test-lock\` reads \`docs-public/guard-data/risk-map.txt\` from main to decide which slices may be planned and built in one PR:" >> "$out"
+  echo >> "$out"; printf '%s\n' "$mapcheck" | grep '^PROBLEM' | sed 's/^PROBLEM  /- /' >> "$out"
+fi
+
 # kit-keeper-Opus5.5-agent, 2026-09-28: the kit is private. Any kit file
 # (docs/, CLAUDE*.md) tracked on main is public, and stays in history.
 leaked="$(git ls-files -- docs ':(glob)**/CLAUDE*.md' | head -20)"
@@ -76,7 +84,7 @@ fi
 scan=0; vulns="$(python3 -I .github/scripts/scan-locks.py)" || scan=$?
 if [ "$scan" -eq 1 ]; then
   found=1; section "⚠️ Known vulnerabilities in main's locks"
-  echo "Published after these versions were locked, so no PR check saw them. Ask the agent for a slice that moves each to its fixed version (a security fix may skip the 7-day cooldown, named in the PR):" >> "$out"
+  echo "OSV lists these for versions locked on main: an advisory published after the merge, or a lock that came in without the audit. Ask the agent for a slice that moves each to its fixed version (a security fix may skip the 7-day cooldown, named in the PR):" >> "$out"
   echo >> "$out"; printf '%s\n' "$vulns" >> "$out"
 elif [ "$scan" -ne 0 ]; then
   found=1; section "⚠️ The re-scan of main's locks couldn't run"
@@ -85,7 +93,7 @@ elif [ "$scan" -ne 0 ]; then
 fi
 
 # 2. Anything merged without a PASS (AC-14), and guard files changed (AC-18)
-nopass=""; approvals=""; guardchg=""
+nopass=""; approvals=""; guardchg=""; oneprs=""
 for pr in $(gh api "repos/$repo/pulls?state=closed&sort=updated&direction=desc&per_page=50" \
     --jq ".[] | select(.merged_at != null and .merged_at >= \"$since\") | .number"); do
   sha="$(gh api "repos/$repo/pulls/$pr" --jq .head.sha)"
@@ -105,6 +113,14 @@ for pr in $(gh api "repos/$repo/pulls?state=closed&sort=updated&direction=desc&p
     continue
   fi
   [ -z "$missing" ] || nopass="$nopass- #$pr $title (no PASS from:$missing)"$'\n'
+  # kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): a PR that passed and
+  # changed both plans and code is a one-PR slice. Listed on its own, its
+  # plan files left out of "Guard files changed", so a project where no
+  # slice is ever risky stands out
+  if [ -z "$missing" ] && printf '%s\n' "$all" | grep -qE '^plans/' && printf '%s\n' "$all" | grep -qvE "$plan_paths"; then
+    oneprs="$oneprs- #$pr $title"$'\n'
+    all="$(printf '%s\n' "$all" | grep -vE "$plan_paths" || true)"
+  fi
   files="$(printf '%s\n' "$all" | grep -E "$guard_paths" || true)"
   [ -z "$files" ] || guardchg="$guardchg- #$pr $title: $(printf '%s' "$files" | tr '\n' ' ')"$'\n'
 done
@@ -117,6 +133,7 @@ done
 if [ -n "$direct" ]; then found=1; section "⚠️ Changes that reached main without a pull request"; printf '%s' "$direct" >> "$out"; fi
 if [ -n "$nopass" ]; then found=1; section "Merged without a PASS"; echo "These were merged although the reviewer or the test lock did not pass. Usually an owner bypass (guard, setup, proof or re-plan PRs). Check each one was meant." >> "$out"; echo >> "$out"; printf '%s' "$nopass" >> "$out"; fi
 if [ -n "$guardchg" ]; then found=1; section "Guard files changed"; printf '%s' "$guardchg" >> "$out"; fi
+if [ -n "$oneprs" ]; then found=1; section "One-PR slices merged (routine: plan and code in one PR, checked by the test lock)"; echo "Each passed the reviewer and the test lock. If no slice is ever risky, check the risk map still covers the data, sign-in and shared code." >> "$out"; echo >> "$out"; printf '%s' "$oneprs" >> "$out"; fi
 if [ -n "$approvals" ]; then found=1; section "Plans you approved (bypass merges that changed only plan files)"; echo "Expected: each feature, slice plan, re-plan and closing retro is approved this way. Check each is one you meant." >> "$out"; echo >> "$out"; printf '%s' "$approvals" >> "$out"; fi
 
 # Open guard-breach issues from the tripwire
