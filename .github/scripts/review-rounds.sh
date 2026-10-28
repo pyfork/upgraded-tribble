@@ -55,15 +55,23 @@ filter)
     file="$(jq -r '.rule_file // ""' <<< "$f")"; sec="$(jq -r '.rule_section // ""' <<< "$f")"; key="$file#$sec"
     ok=false
     case "$file" in ''|/*|*..*|pr-head/*) ;; *)
-      [ -f "$root/$file" ] && [ -n "$sec" ] && grep -E '^#+ ' "$root/$file" | grep -qiF -- "$sec" && ok=true ;;
+      # PROOF-21: the kit's rules don't all use markdown headings
+      # ("THE RULE"), so the section is any line of the file naming it
+      [ -f "$root/$file" ] && [ -n "$sec" ] && grep -qiF -- "$sec" "$root/$file" && ok=true ;;
     esac
     if [ "$ok" != true ]; then out="$(jq -c --argjson f "$f" '.notes += [$f]' <<< "$out")"
     elif [ "$b" != - ] && ! jq -e --arg k "$key" 'index($k)' <<< "$keysb" > /dev/null; then out="$(jq -c --argjson f "$f" '.flaky += [$f]' <<< "$out")"
     else out="$(jq -c --argjson f "$f" --arg k "$key" '.blocking += [$f + {key: $k}] | .blocking |= unique_by(.key)' <<< "$out")"; fi
   done < <(jq -c '.findings // [] | .[]' "$a")
-  # Fails closed: a FAIL that lists no finding at all still blocks
+  # Fails closed: a FAIL that lists no finding at all still blocks, and so
+  # does a FAIL whose cited rules all failed the check (PROOF-21: a real
+  # FAIL became a PASS that way). Only a FAIL made of uncited notes passes
   if [ "$verdict" = FAIL ] && [ "$(jq '.findings // [] | length' "$a")" -eq 0 ]; then
     out="$(jq -c '.blocking += [{key: "reviewer#no findings", rule_file: "", rule_section: "", text: "The reviewer said FAIL but listed no finding"}]' <<< "$out")"
+  elif [ "$verdict" = FAIL ] && [ "$(jq '.blocking | length' <<< "$out")" -eq 0 ]; then
+    while IFS= read -r f; do
+      out="$(jq -c --argjson f "$f" '.blocking += [$f + {key: "\($f.rule_file)#\($f.rule_section)", text: ("Cited rule not found as given: " + $f.text)}] | .notes -= [$f]' <<< "$out")"
+    done < <(jq -c '.notes[] | select(.rule_file != "")' <<< "$out")
   fi
   jq -c --arg v "$verdict" '. + {verdict: $v}' <<< "$out" ;;
 
