@@ -35,3 +35,8 @@ AC-4  When `bash scripts/greet-shout.sh` is run with `Ada`, the command prints
 
 AC-5  When `bash scripts/greet-dated.sh Ada 2026-10-28` is run, the command
       prints exactly `Hello, Ada! (2026-10-28)` and exits with code 0.
+
+## Rules added by slice 4 (2026-10-28)
+
+AC-6  When `bash scripts/greet-day.sh Ada 2026-10-28` is run, the command
+      prints exactly `2026-10-28: Hello, Ada!` and exits with code 0.

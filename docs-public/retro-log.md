@@ -97,3 +97,11 @@
 - **Went wrong:**
   - A project rule break merged because the reviewer missed it (count: 1).
 - **Check proposed:** `scripts/check-strict.sh` in the test command, added in #139.
+
+## greet, slice 3 (2026-10-28, written at slice 4)
+- **Watched:** none planned (nothing is deployed) → `acceptance/greet-3.sh` passes in every `locked-checks` run since #143.
+- **Flow:** #143 FAILed once (a system-clock fallback), was fixed, ruled solved at judge round 1 and auto-merged (KIT-014).
+- **Bugs traced:** none shipped.
+- **Went wrong:**
+  - A clock read slipped into the first build (count: 1). The reviewer caught it.
+- **Check proposed:** none: the stack has no linter for clock reads; the reviewer is the check.
