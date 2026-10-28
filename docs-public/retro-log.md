@@ -75,3 +75,10 @@
 
 **Feature done:** the end goal holds (text as an argument or on standard input gives a bare word count, #61; the usage message shows both forms, #63), and Owed has no open item.
 **Same order again?** Yes, with one change: the usage message should have changed in slice 2, together with the new input it describes; slice 3 exists only because it was missed.
+
+## greet, slice 1 (2026-10-28, written at slice 2)
+- **Watched:** none planned (nothing is deployed) → `acceptance/greet.sh` passes on the Linux CI runner in every `locked-checks` run since.
+- **Flow:** not measured: slice 1 predates `flow-numbers.sh`.
+- **Bugs traced:** none.
+- **Went wrong:** none recorded.
+- **Check proposed:** none.
