@@ -10,3 +10,4 @@
 - stamp: `bash scripts/stamp.sh <title> <YYYY-MM-DD>` prints the report header for that day, `(weekend)` on Saturday and Sunday (stamp slice 1).
 - greet: `bash scripts/greet-shout.sh <name>` prints the Hello line in capitals (greet slice 2).
 - greet: `bash scripts/greet-dated.sh <name> <date>` prints the greeting with the date it is for (greet slice 3).
+- greet: `bash scripts/greet-day.sh <name> <date>` prints the greeting with the date it is for (greet slice 4).
