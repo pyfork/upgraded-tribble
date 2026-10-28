@@ -30,3 +30,8 @@ AC-3  When run with an empty-string argument (`""`), the command prints
 
 AC-4  When `bash scripts/greet-shout.sh` is run with `Ada`, the command prints
       exactly `HELLO, ADA!` on one line and exits with code 0.
+
+## Rules added by slice 3 (2026-10-28)
+
+AC-5  When `bash scripts/greet-loud.sh` is run with `Ada`, the command prints
+      exactly `HELLO, ADA!` on one line and exits with code 0.

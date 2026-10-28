@@ -43,3 +43,22 @@ Open questions:     none
 - **Decisions:** a new script, not a flag on `scripts/greet.sh`, so slice 1's file and its locked check stay untouched. Not taken: a `--loud` flag, which changes slice 1's argument handling.
 - **Intermediate state:** after merge, both forms work. Intended.
 - **Undo:** revert this PR.
+
+<!-- senior-lead-Opus5.5-agent, 2026-10-28: one-PR slice (KIT-008) -->
+## Slice 3
+- **Statement:** When someone runs `bash scripts/greet-loud.sh Ada`, they see `HELLO, ADA!`.
+- **Criteria:** AC-5
+- **Risk class:** none
+- **Depth:** SKIM; undo: easy, because a revert removes one new file; spread: none, because nothing calls it and `scripts/greet.sh` is unchanged; read: the new file whole.
+- **Why here:** slice 2 added a capitals form; this adds a second name for it, for scripts that call it loud.
+- **Why this size:** one behaviour in one new file, `scripts/greet-loud.sh`. Est. diff: under 6 product-code lines.
+- **Calendar time:** none, because no date is read or shown.
+- **Locked checks:** 1, `acceptance/greet-3.sh`: happy: `Ada` -> prints exactly `HELLO, ADA!`, exit 0 (AC-5).
+  LOCKED: acceptance/greet-3.sh
+- **Flags added:** none
+- **Risks scanned:** 12 empty (no name prints `HELLO, WORLD!`, as slice 1's default; no AC asks for more). Others not realistic for a one-line local command.
+- **Budget touched:** none, because not a hot path.
+- **Watch in production:** none, because nothing is deployed.
+- **Decisions:** a new script, not a flag on `scripts/greet.sh`, so slice 1's file and its locked check stay untouched. Not taken: a `--loud` flag, which changes slice 1's argument handling.
+- **Intermediate state:** after merge, both forms work. Intended.
+- **Undo:** revert this PR.
