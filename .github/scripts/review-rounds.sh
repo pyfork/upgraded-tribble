@@ -5,7 +5,8 @@
 #
 #   review-rounds.sh state  <reviews.json>             -> state JSON
 #   review-rounds.sh filter <runA> <runB|-> <root>     -> filtered findings JSON
-#   review-rounds.sh decide <state> <filtered> <judge|-> <sha> -> decision JSON
+#   review-rounds.sh decide <state> <filtered> <judge|-> <sha> [results.txt]
+#                                                      -> decision JSON
 #   review-rounds.sh seal   <record JSON>              -> marker line to post
 #
 # State lives in the reviewer app's own PR reviews, one sealed record per
@@ -77,13 +78,18 @@ filter)
 
 # One run's outcome. pass = the check passes; record = what to seal.
 decide)
-  st="$2"; fl="$3"; jd="$4"; sha="$5"
+  st="$2"; fl="$3"; jd="$4"; sha="$5"; res="${6:-}"
   judge='{"rulings":[]}'; [ "$jd" != - ] && judge="$(cat "$jd")"
-  jq -n --argjson s "$(cat "$st")" --argjson f "$(cat "$fl")" --argjson j "$judge" --arg sha "$sha" '
+  # KIT-014 (PROOF-21): the test command is where scripted project rules
+  # run, so its FAIL fails the check by itself, with no model in between
+  suite=false; [ -n "$res" ] && [ -f "$res" ] && grep -q '^FAIL: ' "$res" && suite=true
+  jq -n --argjson s "$(cat "$st")" --argjson f "$(cat "$fl")" --argjson j "$judge" --arg sha "$sha" --argjson suite "$suite" '
     def keys(x): [x[] | .key];
     ($f.blocking) as $found
     | if $s.tampered then
         {pass:false, owner:true, why:"A review-state record on this PR was edited, so the round count cannot be trusted. The owner decides.", unsolved:$s.open, record:null}
+      elif $suite then
+        {pass:false, owner:false, why:"The test command failed (a test or a scripted project rule is red; see the locked-checks results). Fix it on the branch: not a judge round.", unsolved:$s.open, record:null}
       elif $f.verdict == "BLOCKED" then
         {pass:false, owner:false, why:"The reviewer was BLOCKED (missing inputs). Not a fix round.", unsolved:$s.open, record:null}
       elif $s.with_owner then
