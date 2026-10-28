@@ -9,3 +9,4 @@
 - wordcount: the usage message for more than one argument also shows the piped form, `<command> | bash scripts/wordcount.sh` (wordcount slice 3).
 - stamp: `bash scripts/stamp.sh <title> <YYYY-MM-DD>` prints the report header for that day, `(weekend)` on Saturday and Sunday (stamp slice 1).
 - greet: `bash scripts/greet-shout.sh <name>` prints the Hello line in capitals (greet slice 2).
+- bye: `bash scripts/bye-word.sh <name>` prints the farewell word stored in `data/bye-word.txt` (bye slice 2).
