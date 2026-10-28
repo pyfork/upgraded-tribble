@@ -25,3 +25,22 @@
 ```text
 Open questions:     none
 ```
+
+<!-- senior-lead-Opus5.5-agent, 2026-10-28: slice-plan PR (risky: DATA) -->
+## Slice 2
+- **Statement:** When someone runs `bash scripts/bye-word.sh Ada`, they see the farewell word stored in `data/bye-word.txt`, then `, Ada!`.
+- **Criteria:** AC-4
+- **Risk class:** DATA (reads a stored file under `data/`, a risk-map path)
+- **Depth:** SKIM; undo: easy, because a revert removes one script and one data file; spread: none, because nothing calls them; read: both new files whole.
+- **Why here:** slice 1 printed a fixed word; this is the first slice that reads stored data, so it takes the risky path.
+- **Why this size:** one behaviour, one new script and its one data file. Est. diff: under 6 product-code lines.
+- **Calendar time:** none, because no date is read or shown.
+- **Locked checks:** 1, `acceptance/bye-2.sh`: happy: with the PR's `data/bye-word.txt` (`Farewell`), `Ada` -> prints exactly `Farewell, Ada!`, exit 0 (AC-4).
+  LOCKED: acceptance/bye-2.sh
+- **Flags added:** none
+- **Risks scanned:** 5 invalid input and 12 empty (a missing file exits non-zero under strict mode; no AC asks for more). Others not realistic for a local command.
+- **Budget touched:** none, because not a hot path.
+- **Watch in production:** none, because nothing is deployed.
+- **Decisions:** the word is the file's first line. Not taken: an environment variable; the brief asks for stored data.
+- **Intermediate state:** after the build merges, the command works. Intended.
+- **Undo:** revert the build PR.
