@@ -83,8 +83,8 @@
 - **Went wrong:** none recorded.
 - **Check proposed:** none.
 
-## bye, slice 2 (2026-10-28, written at slice 3)
-- **Watched:** none planned (nothing is deployed) → `acceptance/bye-2.sh` passes on the Linux CI runner in every `locked-checks` run since.
+## bye, slice 1 (2026-10-28, written at slice 3)
+- **Watched:** none planned (nothing is deployed) → `acceptance/bye.sh` passes on the Linux CI runner in every `locked-checks` run since.
 - **Flow:** not measured: slice 1 predates `flow-numbers.sh`.
 - **Bugs traced:** none.
 - **Went wrong:** none recorded.

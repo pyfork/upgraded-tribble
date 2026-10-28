@@ -32,7 +32,7 @@ Open questions:     none
 - **Criteria:** AC-5
 - **Risk class:** none
 - **Depth:** SKIM; undo: easy, because a revert removes one new file; spread: none, because nothing calls it and `scripts/bye.sh` is unchanged; read: the new file whole.
-- **Why here:** slice 2 added a capitals form; this adds a second name for it, for scripts that call it loud.
+- **Why here:** slice 1 printed the Bye line; this adds a capitals form beside it.
 - **Why this size:** one behaviour in one new file, `scripts/bye-loud.sh`. Est. diff: under 6 product-code lines.
 - **Calendar time:** none, because no date is read or shown.
 - **Locked checks:** 1, `acceptance/bye-3.sh`: happy: `Ada` -> prints exactly `BYE, ADA!`, exit 0 (AC-5).
