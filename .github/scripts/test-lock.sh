@@ -111,5 +111,21 @@ if [ -d "$pr/.git" ]; then
   fi
 fi
 
+# guard-builder-Opus5.5-agent, 2026-10-28 (KIT-014): with a map on main,
+# a new file whose path names a risky thing (pay, credit, ledger, auth,
+# notice, terms, deploy) must sit under a mapped path. Otherwise CODEOWNERS
+# doesn't hold it for the owner and a routine PR could auto-merge it. Plan
+# paths are exempt: they are the plan, not the thing.
+risky_words='pay|credit|ledger|auth|notice|terms|deploy'
+map="$main/docs-public/guard-data/risk-map.txt"
+if [ -d "$pr/.git" ] && [ -f "$map" ]; then
+  globs="$(grep -vE '^[[:space:]]*(#|$)' "$map" | awk '{print ":(glob)" $2}')"
+  for f in $(g diff --name-only --diff-filter=A origin/main...HEAD 2>/dev/null | grep -iE "$risky_words" | grep -vE "$plan_paths" || true); do
+    # shellcheck disable=SC2086
+    [ -n "$globs" ] && [ -n "$(g ls-files -- $globs 2>/dev/null | grep -Fx -- "$f")" ] && continue
+    say "RISKY NAME: $f is new and its path names a risky thing ($(printf '%s' "$f" | grep -ioE "$risky_words" | head -1)), but no line of main's risk map covers it. Add its path to the map in a plan PR the owner merges, or rename it if it isn't risky"
+  done
+fi
+
 [ "$problems" -eq 0 ] && echo "All locked checks match their fingerprints on main."
 [ "$problems" -eq 0 ]

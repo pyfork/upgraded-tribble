@@ -28,17 +28,30 @@ files)
   for f in .github/workflows/slice-review.yml .github/workflows/test-lock.yml \
            .github/workflows/daily-sweep.yml .github/workflows/main-tripwire.yml \
            .github/scripts/test-lock.sh .github/scripts/daily-sweep.sh \
-           .github/scripts/runtime-check.sh \
+           .github/scripts/runtime-check.sh .github/scripts/review-rounds.sh \
            docs-public/guard-data/expected-protection.json; do
     if api "contents/$f?ref=main" > /dev/null; then ok "on main: $f"; else bad "missing on main: $f"; fi
   done ;;
 
+# guard-builder-Opus5.5-agent, 2026-10-28 (KIT-014): CODEOWNERS follows the
+# risk map line for line. No map: the one line "* @owner"
 codeowners)
   owner="$(repo_var GUARD_OWNER_LOGIN)"
   body="$(api "contents/.github/CODEOWNERS?ref=main" | jq -r '.content // empty' | base64 --decode 2>/dev/null || true)"
+  map="$(api "contents/docs-public/guard-data/risk-map.txt?ref=main" | jq -r '.content // empty' | base64 --decode 2>/dev/null || true)"
+  have="$(printf '%s\n' "$body" | grep -vE '^[[:space:]]*(#|$)' | awk '{$1=$1; print}')"
   if [ -z "$body" ]; then bad "no .github/CODEOWNERS on main"
-  elif [ -n "$owner" ] && printf '%s\n' "$body" | grep -qE "^\*[[:space:]]+@$owner([[:space:]]|$)"; then ok "CODEOWNERS: * @$owner"
-  else bad "CODEOWNERS has no '* @${owner:-<GUARD_OWNER_LOGIN>}' line"; fi ;;
+  elif [ -z "$owner" ]; then bad "GUARD_OWNER_LOGIN is unset: can't check CODEOWNERS"
+  elif [ -z "$(printf '%s\n' "$map" | grep -vE '^[[:space:]]*(#|$)')" ]; then
+    [ "$have" = "* @$owner" ] && ok "CODEOWNERS: * @$owner (no risk map on main, so every PR waits for the owner)" \
+      || bad "CODEOWNERS is not the one line '* @$owner', and there is no risk map on main"
+  else
+    want="$(printf '%s\n' "$map" | grep -vE '^[[:space:]]*(#|$)' | awk -v o="@$owner" '{print "/" $2 " " o}')"
+    badglob="$(printf '%s\n' "$map" | grep -vE '^[[:space:]]*(#|$)' | awk '{print $2}' | grep -E '^/|[^A-Za-z0-9._/*-]' || true)"
+    if [ -n "$badglob" ]; then bad "risk map glob(s) CODEOWNERS can't read (leading /, or ! [ ] ? \\ space): $(printf '%s' "$badglob" | tr '\n' ' ')"
+    elif [ "$have" = "$want" ]; then ok "CODEOWNERS: @$owner on the risk map's $(printf '%s\n' "$want" | wc -l | tr -d ' ') path(s), nothing else"
+    else bad "CODEOWNERS doesn't match the risk map line for line. Want: $(printf '%s' "$want" | tr '\n' ';')"; fi
+  fi ;;
 
 rules)
   app="$(repo_var REVIEWER_APP_ID)"; [ -n "$app" ] || app="${REVIEWER_APP_ID:-}"
@@ -47,8 +60,10 @@ rules)
   for t in deletion non_fast_forward; do
     printf '%s' "$rules" | jq -e --arg t "$t" 'any(.[]; .type == $t)' > /dev/null && ok "rule on main: $t" || bad "rule missing on main: $t"
   done
-  printf '%s' "$rules" | jq -e 'any(.[]; .type == "pull_request" and .parameters.require_code_owner_review and .parameters.required_approving_review_count >= 1)' > /dev/null \
-    && ok "rule on main: pull request, 1 approval, code-owner review" || bad "rule on main: pull request with 1 approval and code-owner review is missing"
+  printf '%s' "$rules" | jq -e 'any(.[]; .type == "pull_request" and .parameters.require_code_owner_review and .parameters.required_approving_review_count == 0)' > /dev/null \
+    && ok "rule on main: pull request, 0 approvals, code-owner review" || bad "rule on main: pull request with 0 approvals and code-owner review is missing (KIT-014: the owner reviews only the risk map's paths)"
+  # KIT-014: routine PRs merge themselves, so repo auto-merge must be on
+  [ "$(gh api "repos/$repo" 2>/dev/null | jq -r '.allow_auto_merge')" = "true" ] && ok "repository: auto-merge allowed" || bad "repository: 'Allow auto-merge' is off (Settings, General, Pull Requests)"
   printf '%s' "$rules" | jq -e 'any(.[]; .type == "required_status_checks" and .parameters.strict_required_status_checks_policy)' > /dev/null \
     && ok "rule on main: branches up to date" || bad "rule on main: 'require branches to be up to date' is off"
   for c in slice-review test-lock; do

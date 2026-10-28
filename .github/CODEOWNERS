@@ -1,6 +1,12 @@
-# guard-builder-Opus5.5-agent
-# Owner approval is required for every change (enforced by the protect-main
-# ruleset). Agent sessions run as the agent login and can't approve their
-# own PRs.
-# BLANK: replace pyfork with the owner's GitHub login.
-* @pyfork
+# guard-builder-Opus5.5-agent, 2026-10-28 (KIT-014)
+# The owner owns the risk map's paths, one line per line of
+# docs-public/guard-data/risk-map.txt, same order. A PR touching one waits
+# for the owner (protect-main: 0 approvals, code-owner review). A PR touching
+# none merges itself once every required check is green.
+/data/** @pyfork
+/scripts/install.sh @pyfork
+/requirements.* @pyfork
+/.github/** @pyfork
+/githooks/** @pyfork
+/docs-public/guard-data/** @pyfork
+/specs/features/*/brief.md @pyfork

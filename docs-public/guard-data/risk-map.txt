@@ -8,3 +8,7 @@ DATA    data/**
 SHARED  scripts/install.sh
 SHARED  requirements.*
 SHARED  .github/**
+# KIT-014: the kit's guard and brief lines; CODEOWNERS follows this list
+SHARED  githooks/**
+SHARED  docs-public/guard-data/**
+SHARED  specs/features/*/brief.md
