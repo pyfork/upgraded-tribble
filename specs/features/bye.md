@@ -26,3 +26,8 @@ AC-3  When run with an empty-string argument (`""`), the command prints
 - Loading, Error, Retry, Disabled, Partial: cannot happen (no input other
   than the one optional argument, nothing that can fail).
 - Screen sizes, touch, keyboard, screen reader: not applicable (no screen).
+
+## Rules added by slice 2 (2026-10-28)
+
+AC-4  When `bash scripts/bye-shout.sh` is run with `Ada`, the command prints
+      exactly `BYE, ADA!` on one line and exits with code 0.
