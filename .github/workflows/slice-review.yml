@@ -598,7 +598,7 @@ jobs:
           b=-; [ -z "$B" ] || { printf '%s' "$B" > judge-input/b.json; b=judge-input/b.json; }
           j=-; [ -z "$J" ] || { printf '%s' "$J" > judge-input/j.json; j=judge-input/j.json; }
           bash .github/scripts/review-rounds.sh filter judge-input/a.json "$b" . > judge-input/filtered.json
-          bash .github/scripts/review-rounds.sh decide judge-input/state.json judge-input/filtered.json "$j" "$SHA" > judge-input/decision.json
+          bash .github/scripts/review-rounds.sh decide judge-input/state.json judge-input/filtered.json "$j" "$SHA" review-checks/results.txt > judge-input/decision.json
           jq . judge-input/filtered.json judge-input/decision.json
           rulings='[]'; [ "$j" = - ] || rulings="$(jq -c '.rulings // []' "$j")"
           echo "decision=$(jq -c --slurpfile f judge-input/filtered.json --argjson r "$rulings" '. + {notes: $f[0].notes, flaky: $f[0].flaky, rulings: $r}' judge-input/decision.json)" >> "$GITHUB_OUTPUT"
