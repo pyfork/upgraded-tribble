@@ -1,0 +1,330 @@
+# PROBE for kit KIT-015 (checker tools): a copy of the kit template's
+# runtime and locked-checks jobs, reading the record and plans from this PR.
+# guard-builder-Opus5.5-agent
+# Guard 2: automatic reviewer (AC-4 to AC-8). On every PR change, runs the
+# slice reviewer role from main and publishes its verdict as the
+# `slice-review` check, signed by the reviewer's own GitHub App. The ruleset
+# accepts that check only from the app, so a PR can't fake it.
+#
+# pull_request_target: this file always runs as it is on main, so a PR can't
+# change or switch off its own reviewer. PR code is only ever checked out
+# into a subfolder and never runs in a job that holds a secret. PR code
+# runs only for the owner or agent login, as a user that can't write results.
+# Secrets live in the `reviewer` environment, which only main can use.
+name: tools-proof
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+# A newer push cancels the review still running on the older one
+concurrency:
+  group: tools-proof-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # guard-builder-Opus5.5-agent, 2026-10-25 (KIT-007): reads the production
+  # runtime from main's runtime record, so locked-checks runs on the server's
+  # OS and language version. Fails closed: no record, or a moving label like
+  # ubuntu-latest, and nothing runs. There is no fallback.
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      runner: ${{ steps.record.outputs.runner }}
+      lang: ${{ steps.record.outputs.lang }}
+      version: ${{ steps.record.outputs.version }}
+      jdk: ${{ steps.record.outputs.jdk }}
+      tools: ${{ steps.record.outputs.tools }}
+      check_env: ${{ steps.record.outputs.check_env }}
+    steps:
+      - name: Check out main's runtime record
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/scripts
+            docs-public/guard-data
+
+      - name: Read the runtime record
+        id: record
+        run: |
+          bash .github/scripts/runtime-check.sh record docs-public/guard-data/runtime.txt > record.txt || { cat record.txt; exit 1; }
+          cat record.txt
+          cat record.txt >> "$GITHUB_OUTPUT"
+
+  # Runs main's copy of every locked check, then the project's full test
+  # suite, against the PR's code. No secrets and no environment here.
+  #
+  # kit-keeper-Opus5.5-agent, 2026-10-13 (hardening): PR code is untrusted
+  # even from our own agent. It runs only for ready PRs by the owner or agent
+  # login, and only as the `checker` user: no sudo, no write access to the
+  # results folder, every process of it killed after each run. Result lines
+  # are written by this job from exit codes, so a PR can't forge a PASS.
+  locked-checks:
+    needs: runtime
+    runs-on: ${{ needs.runtime.outputs.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Only ready PRs from the owner or the agent login
+        env:
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          OWNER: ${{ vars.GUARD_OWNER_LOGIN }}
+          AGENT: ${{ vars.GUARD_AGENT_LOGIN }}
+        run: |
+          [ -n "$OWNER" ] && [ -n "$AGENT" ] || { echo "Set the GUARD_OWNER_LOGIN and GUARD_AGENT_LOGIN repository variables"; exit 1; }
+          [ "$AUTHOR" = "$OWNER" ] || [ "$AUTHOR" = "$AGENT" ] || { echo "PR author $AUTHOR: no PR code runs here"; exit 1; }
+          [ "$DRAFT" = "false" ] || { echo "Draft PR: no PR code runs until marked ready"; exit 1; }
+
+      - name: Check out the PR
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+
+      - name: Check out main (plans and locked checks)
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: trusted
+          persist-credentials: false
+
+      # KIT-007: the image's own interpreter when it already is the record's
+      # version (the distribution's build, as on the server); otherwise the
+      # official setup action, pinned by commit
+      - name: Does the image already have the record's runtime?
+        id: have
+        run: |
+          if bash trusted/.github/scripts/runtime-check.sh machine trusted/docs-public/guard-data/runtime.txt; then
+            echo "setup=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "setup=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.have.outputs.setup == 'yes' && needs.runtime.outputs.lang == 'python'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ needs.runtime.outputs.version }}
+      - if: steps.have.outputs.setup == 'yes' && needs.runtime.outputs.lang == 'go'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ needs.runtime.outputs.version }}
+      - if: steps.have.outputs.setup == 'yes' && needs.runtime.outputs.lang == 'java'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version: ${{ needs.runtime.outputs.version }}
+          distribution: ${{ needs.runtime.outputs.jdk }}
+      - if: steps.have.outputs.setup == 'yes' && needs.runtime.outputs.lang == 'node'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ needs.runtime.outputs.version }}
+
+      # The line heads results.txt; a FAIL RUNTIME line turns the job red
+      - name: Check the runtime against the record
+        run: |
+          bash trusted/.github/scripts/runtime-check.sh machine trusted/docs-public/guard-data/runtime.txt > "$RUNNER_TEMP/runtime-line.txt" || true
+          cat "$RUNNER_TEMP/runtime-line.txt"
+
+      # kit-keeper-Opus5.5-agent, 2026-10-28 (KIT-015): the system programs
+      # main's record names (TOOLS, apt names), installed as root before
+      # checker exists, so they land root-owned and the next step closes and
+      # checks them like any other program. A CHECK_ENV program that isn't
+      # there fails closed: a check that needs it could only fail
+      - name: Install the record's tools
+        env:
+          TOOLS: ${{ needs.runtime.outputs.tools }}
+          CHECK_ENV: ${{ needs.runtime.outputs.check_env }}
+        run: |
+          set -f
+          if [ -n "$TOOLS" ]; then
+            sudo apt-get update -qq
+            # shellcheck disable=SC2086
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends $TOOLS > /dev/null \
+              || echo "FAIL TOOLS: apt could not install the record's TOOLS ($TOOLS)" >> "$RUNNER_TEMP/runtime-line.txt"
+          fi
+          for e in $CHECK_ENV; do
+            [ -x "${e#*=}" ] && [ -f "${e#*=}" ] \
+              || echo "FAIL TOOLS: CHECK_ENV ${e%%=*} names ${e#*=}, which is not a program on this runner" >> "$RUNNER_TEMP/runtime-line.txt"
+          done
+          [ -z "$TOOLS$CHECK_ENV" ] || echo "TOOLS ${TOOLS:-none}; CHECK_ENV ${CHECK_ENV:-none}" >> "$RUNNER_TEMP/runtime-line.txt"
+          cat "$RUNNER_TEMP/runtime-line.txt"
+
+      # checker owns its copy of the PR and can read main's checks, nothing
+      # more. Results live in a runner-only folder outside the workspace.
+      # kit-keeper-Opus5.5-agent, 2026-10-26 (senior Q7, PROOF-14): the image
+      # leaves the tool cache, /usr/local/bin and other folders on PATH
+      # writable by every user, so PR code in one check could swap a program
+      # every later check runs (#97). A folder checker owns lets it rename
+      # what's inside, so main's checks live outside its home. Close them,
+      # then fail closed if checker can still write a folder on PATH, one
+      # above it, a file in it, or main's checks (sticky folders excepted)
+      - name: Set up the checker user
+        env:
+          CHECK_ENV: ${{ needs.runtime.outputs.check_env }}
+        run: |
+          # No --create-home: it copies the image's /etc/skel, 17 to 39 s
+          sudo useradd --no-create-home --shell /bin/bash checker
+          sudo install -d -o checker -g checker -m 700 /home/checker
+          sudo install -d -o root -g root -m 755 /srv/kit-trusted /srv/checker-homes
+          sudo cp -R trusted/. /srv/kit-trusted/
+          sudo chown -R root:root /srv/kit-trusted
+          sudo chmod -R a+rX,go-w /srv/kit-trusted
+          # PATH folders: the folder and the files in it. The folders above
+          # one: the folder only. A setup action's tool folder,
+          # <cache>/<tool>/<version>, and main's checks: everything in them
+          bins=(); ups=(); roots=(/srv/kit-trusted)
+          IFS=: read -ra path <<< "$PATH"
+          # A CHECK_ENV program's folder is closed and checked as a PATH folder
+          set -f; for e in $CHECK_ENV; do path+=("$(dirname "${e#*=}")"); done; set +f
+          for d in "${path[@]}"; do
+            [ -d "$d" ] || continue
+            bins+=("$d")
+            case "$d" in "$RUNNER_TOOL_CACHE"/*/*/*)
+              t="${d#"$RUNNER_TOOL_CACHE"/}"; roots+=("$RUNNER_TOOL_CACHE/${t%%/*}/$(cut -d/ -f2 <<< "$t")") ;;
+            esac
+          done
+          for d in "${bins[@]}" "${roots[@]}" /srv/checker-homes; do
+            d="$(dirname "$d")"
+            while [ "$d" != / ] && [ "$d" != . ]; do ups+=("$d"); d="$(dirname "$d")"; done
+          done
+          mapfile -t bins < <(printf '%s\n' "${bins[@]}" | sort -u)
+          mapfile -t ups < <(printf '%s\n' "${ups[@]}" | sort -u)
+          mapfile -t roots < <(printf '%s\n' "${roots[@]}" | sort -u)
+          sudo find "${bins[@]}" -maxdepth 1 ! -type l -perm /022 -exec chmod go-w {} + 2>/dev/null || true
+          sudo find "${ups[@]}" -maxdepth 0 ! -perm -1000 -perm /022 -exec chmod go-w {} + 2>/dev/null || true
+          sudo chmod -R go-w "${roots[@]}"
+          open="$( { sudo -u checker find "${bins[@]}" -maxdepth 1 -writable ! -type l 2>/dev/null
+                     sudo -u checker find "${ups[@]}" -maxdepth 0 -writable ! -perm -1000 2>/dev/null
+                     sudo -u checker find "${roots[@]}" -writable ! -type l 2>/dev/null; } | sort -u | tr '\n' ' ' || true)"
+          echo "Closed and checked ${#bins[@]} PATH folders, ${#ups[@]} above them and ${#roots[@]} whole folders in ${SECONDS} s"
+          if [ -n "${open// /}" ]; then
+            echo "FAIL CHECKER: checker can write these, so PR code could replace a program or check a later run uses: $open" >> "$RUNNER_TEMP/runtime-line.txt"
+            cat "$RUNNER_TEMP/runtime-line.txt"
+          fi
+          # kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): the checks this PR
+          # newly locks, and main's code with the PR's acceptance/ over it,
+          # root-owned until each run copies it, so no earlier run can change it
+          grep -hoE '^[[:space:]]*LOCKED: [^[:space:]]+' trusted/plans/*.md 2>/dev/null | awk '{print $2}' | sort -u > "$RUNNER_TEMP/main-checks.txt" || true
+          grep -hE '^[[:space:]]*LOCKED: [^[:space:]]+' pr/plans/*.md 2>/dev/null | awk '{print $2, $3}' | sort -u \
+            | while read -r c tag; do grep -qxF "$c" "$RUNNER_TEMP/main-checks.txt" || echo "$c $tag"; done > "$RUNNER_TEMP/new-checks.txt" || true
+          if [ -s "$RUNNER_TEMP/new-checks.txt" ]; then
+            sudo install -d -o root -g root -m 755 /srv/kit-before /srv/kit-new
+            sudo cp -R trusted/. /srv/kit-before/
+            [ ! -d pr/acceptance ] || { sudo mkdir -p /srv/kit-before/acceptance /srv/kit-new/acceptance
+              sudo cp -R pr/acceptance/. /srv/kit-before/acceptance/; sudo cp -R pr/acceptance/. /srv/kit-new/acceptance/; }
+            sudo chown -R root:root /srv/kit-before /srv/kit-new
+            sudo chmod -R a+rX,go-w /srv/kit-before /srv/kit-new
+            # A PR that changes files outside the plan paths is a one-PR
+            # slice: its new checks must also pass on its own code
+            plan_paths='^(specs/|plans/|acceptance/|docs-public/guard-data/locks/|docs-public/retro-log\.md$)'
+            other="$(diff <(git -C trusted ls-files -s | awk '{print $2, $4}') <(git -C pr ls-files -s | awk '{print $2, $4}') \
+              | grep -E '^[<>] ' | awk '{print $3}' | grep -vE "$plan_paths" | sort -u || true)"
+            [ -z "$other" ] || touch "$RUNNER_TEMP/has-code"
+          fi
+          sudo cp -R pr /home/checker/pr
+          sudo chown -R checker:checker /home/checker/pr
+          rm -rf pr
+          mkdir -m 700 "$RUNNER_TEMP/results"
+
+      - name: Run locked checks
+        run: |
+          R="$RUNNER_TEMP/results"
+          # One run of PR code as checker; output goes through this job's
+          # pipe, then every checker process is killed before the result line
+          # Each run gets a new, empty home: nothing one run leaves there (a
+          # Python usercustomize, a shell rc) reaches the next (senior Q7)
+          n=0
+          # CHECK_ENV pairs from main's record, checked by runtime-check.sh
+          set -f; read -ra check_env <<< "$CHECK_ENV"; set +f
+          as_checker() { # <command> [folder to run in; default the PR]
+            local rc=0 h
+            n=$((n + 1)); h="/srv/checker-homes/$n"
+            sudo install -d -o checker -g checker -m 700 "$h"
+            sudo -u checker env -i HOME="$h" PATH="$PATH" TEST_COMMAND="$TEST_COMMAND" "${check_env[@]}" \
+              timeout 600 bash -c "cd ${2:-/home/checker/pr} && $1" > "$R/out.txt" 2>&1 < /dev/null || rc=$?
+            sudo pkill -KILL -u checker || true
+            return $rc
+          }
+          { cat "$RUNNER_TEMP/runtime-line.txt"; echo; } > "$R/results.txt"
+          # KIT-007: on the wrong runtime, or where PR code could swap a
+          # program on PATH, a PASS proves nothing; run nothing
+          if grep -qE '^FAIL (RUNTIME|CHECKER|TOOLS)' "$R/results.txt"; then
+            echo "Locked checks and the full suite not run: see the FAIL line above." >> "$R/results.txt"
+            cp "$R/results.txt" results.txt; cat results.txt; exit 1
+          fi
+          checks="$(grep -hoE '^[[:space:]]*LOCKED: [^[:space:]]+' trusted/plans/*.md 2>/dev/null | awk '{print $2}' | sort -u || true)"
+          [ -n "$checks" ] || echo "NO LOCKED CHECKS found in plans/ on main" >> "$R/results.txt"
+          for c in $checks; do
+            if [ ! -f "trusted/$c" ]; then echo "MISSING ON MAIN: $c" >> "$R/results.txt"; continue; fi
+            # Only scripts run; other locked paths are test files locked for
+            # their fingerprint (guard 3), run by their wrapper script
+            case "$c" in *.sh) ;; *) echo "LOCKED FILE (not run): $c" >> "$R/results.txt"; echo >> "$R/results.txt"; continue ;; esac
+            if as_checker "bash /srv/kit-trusted/$c"; then r=PASS; else r=FAIL; fi
+            { echo "$r $c"; head -c 2000 "$R/out.txt" | sed 's/^/    /'; echo; echo; } >> "$R/results.txt"
+          done
+          # kit-keeper-Opus5.5-agent, 2026-10-27 (KIT-008): the build gate in
+          # code. Each check the PR newly locks runs once on main's code: one
+          # that passes there proves no new work. A LOCKED line ending in
+          # REGRESSION is planned to pass before, and must
+          if [ -s "$RUNNER_TEMP/new-checks.txt" ]; then
+            echo "=== CHECKS THIS PR NEWLY LOCKS, ON MAIN'S CODE (each must fail before the work) ===" >> "$R/results.txt"
+            while read -r c tag; do
+              case "$c" in *.sh) ;; *) continue ;; esac
+              d="/srv/checker-homes/before-$n"
+              sudo cp -R /srv/kit-before "$d"
+              sudo chown -R checker:checker "$d"
+              if as_checker "bash $c" "$d"; then
+                if [ "$tag" = REGRESSION ]; then r="BEFORE PASS $c (REGRESSION: passes before, as planned)"
+                else r="FAIL PASSES ON MAIN: $c passes on main's code, so it proves no new work. Re-plan it, or end its LOCKED line with REGRESSION and give the reason in the plan"; fi
+              else
+                if [ "$tag" = REGRESSION ]; then r="FAIL REGRESSION ON MAIN: $c ends its LOCKED line with REGRESSION but fails on main's code"
+                else r="BEFORE FAIL $c (fails on main's code, as a new check should)"; fi
+              fi
+              { echo "$r"; head -c 1000 "$R/out.txt" | sed 's/^/    /'; echo; } >> "$R/results.txt"
+            done < "$RUNNER_TEMP/new-checks.txt"
+            # One-PR slice: the same checks on the PR's code, from a
+            # root-owned copy, so they hold before they are main's
+            if [ -f "$RUNNER_TEMP/has-code" ]; then
+              echo "=== CHECKS THIS PR NEWLY LOCKS, ON THE PR'S CODE (one-PR slice) ===" >> "$R/results.txt"
+              while read -r c tag; do
+                case "$c" in *.sh) ;; *) continue ;; esac
+                if as_checker "bash /srv/kit-new/$c"; then r=PASS; else r=FAIL; fi
+                { echo "$r $c (new)"; head -c 2000 "$R/out.txt" | sed 's/^/    /'; echo; echo; } >> "$R/results.txt"
+              done < "$RUNNER_TEMP/new-checks.txt"
+            fi
+          fi
+          # The suite runs the PR's own test config, so a PR can weaken it.
+          # Labelled advisory; the reviewer checks test config changes in the diff
+          echo "=== FULL TEST SUITE (PR's own test config: advisory) ===" >> "$R/results.txt"
+          if [ -z "$TEST_COMMAND" ]; then
+            echo "NOT CONFIGURED: set the GUARD_TEST_COMMAND repository variable" >> "$R/results.txt"
+          elif as_checker 'bash -c "$TEST_COMMAND"'; then
+            { echo "PASS: $TEST_COMMAND"; tail -c 3000 "$R/out.txt" | sed 's/^/    /'; } >> "$R/results.txt"
+          else
+            { echo "FAIL: $TEST_COMMAND"; tail -c 3000 "$R/out.txt" | sed 's/^/    /'; } >> "$R/results.txt"
+          fi
+          cp "$R/results.txt" results.txt
+          cat results.txt
+          # kit-keeper-Opus5.5-agent, 2026-10-13: red when any check or the
+          # suite fails, so the tick matches the result (Proof 9, #44). Output is
+          # indented, so only result lines start with FAIL
+          if grep -qE '^FAIL' results.txt; then echo "A locked check or the full suite failed"; exit 1; fi
+        env:
+          TEST_COMMAND: ${{ vars.GUARD_TEST_COMMAND }}
+          CHECK_ENV: ${{ needs.runtime.outputs.check_env }}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: locked-check-results
+          path: results.txt
+
