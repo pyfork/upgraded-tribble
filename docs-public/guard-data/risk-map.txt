@@ -10,5 +10,7 @@ SHARED  requirements.*
 SHARED  .github/**
 # KIT-014: the kit's guard and brief lines; CODEOWNERS follows this list
 SHARED  githooks/**
-SHARED  docs-public/guard-data/**
+SHARED  docs-public/guard-data/risk-map.txt
+SHARED  docs-public/guard-data/expected-protection.json
+SHARED  docs-public/guard-data/runtime.txt
 SHARED  specs/features/*/brief.md
