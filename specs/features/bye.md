@@ -26,3 +26,8 @@ AC-3  When run with an empty-string argument (`""`), the command prints
 - Loading, Error, Retry, Disabled, Partial: cannot happen (no input other
   than the one optional argument, nothing that can fail).
 - Screen sizes, touch, keyboard, screen reader: not applicable (no screen).
+
+## Rules added by slice 2 (2026-10-28)
+
+AC-4  When `data/bye-word.txt` holds `Farewell` and `bash scripts/bye-word.sh Ada`
+      is run, the command prints exactly `Farewell, Ada!` and exits with code 0.

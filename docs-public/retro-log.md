@@ -82,3 +82,10 @@
 - **Bugs traced:** none.
 - **Went wrong:** none recorded.
 - **Check proposed:** none.
+
+## bye, slice 1 (2026-10-28, written at slice 2)
+- **Watched:** none planned (nothing is deployed) → `acceptance/bye.sh` passes in every `locked-checks` run since.
+- **Flow:** not measured: slice 1 predates `flow-numbers.sh`.
+- **Bugs traced:** none.
+- **Went wrong:** none recorded.
+- **Check proposed:** none.
