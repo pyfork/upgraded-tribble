@@ -89,3 +89,11 @@
 - **Bugs traced:** none.
 - **Went wrong:** none recorded.
 - **Check proposed:** none.
+
+## greet, slice 2 (2026-10-28, written at slice 3)
+- **Watched:** none planned (nothing is deployed) → `acceptance/greet-2.sh` passes in every `locked-checks` run since #126.
+- **Flow:** #126 auto-merged within two minutes of being opened (KIT-014 routine path).
+- **Bugs traced:** `scripts/greet-shout.sh` shipped without `set -euo pipefail`; fixed in #139.
+- **Went wrong:**
+  - A project rule break merged because the reviewer missed it (count: 1).
+- **Check proposed:** `scripts/check-strict.sh` in the test command, added in #139.

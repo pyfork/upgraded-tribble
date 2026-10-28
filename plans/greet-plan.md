@@ -43,3 +43,22 @@ Open questions:     none
 - **Decisions:** a new script, not a flag on `scripts/greet.sh`, so slice 1's file and its locked check stay untouched. Not taken: a `--loud` flag, which changes slice 1's argument handling.
 - **Intermediate state:** after merge, both forms work. Intended.
 - **Undo:** revert this PR.
+
+<!-- senior-lead-Opus5.5-agent, 2026-10-28: one-PR slice (KIT-008) -->
+## Slice 3
+- **Statement:** When someone runs `bash scripts/greet-dated.sh Ada 2026-10-28`, they see `Hello, Ada! (2026-10-28)`.
+- **Criteria:** AC-5
+- **Risk class:** none
+- **Depth:** SKIM; undo: easy, because a revert removes one new file; spread: none, because nothing calls it; read: the new file whole.
+- **Why here:** slices 1 and 2 greet with no date; this adds the day the greeting is for.
+- **Why this size:** one behaviour in one new file, `scripts/greet-dated.sh`. Est. diff: under 6 product-code lines.
+- **Calendar time:** the date is the second argument, the one clock (engineering rules section 10); the script never reads the system date.
+- **Locked checks:** 1, `acceptance/greet-3.sh`: happy: `Ada 2026-10-28` -> prints exactly `Hello, Ada! (2026-10-28)`, exit 0 (AC-5).
+  LOCKED: acceptance/greet-3.sh
+- **Flags added:** none
+- **Risks scanned:** 9 time (date given, never read from the system); 12 empty (no name greets world, as slice 1). Others not realistic for a one-line local command.
+- **Budget touched:** none, because not a hot path.
+- **Watch in production:** none, because nothing is deployed.
+- **Decisions:** the date is printed as given. Not taken: checking its form; no AC asks.
+- **Intermediate state:** after merge, the dated form works. Intended.
+- **Undo:** revert this PR.
