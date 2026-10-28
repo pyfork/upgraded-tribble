@@ -51,7 +51,9 @@ filter)
   a="$2"; b="$3"; root="$4"
   verdict="$(jq -r '.verdict // "FAIL"' "$a")"
   out='{"blocking":[],"notes":[],"flaky":[]}'
-  keysb="[]"; [ "$b" != - ] && keysb="$(jq -c '[.findings // [] | .[] | "\(.rule_file)#\(.rule_section)"]' "$b")"
+  # A repeat is the same rule file in the re-run: the two runs name one
+  # section differently ("10. TESTS", "Time in tests"; PROOF-21)
+  keysb="[]"; [ "$b" != - ] && keysb="$(jq -c '[.findings // [] | .[] | select(.rule_file != "") | .rule_file]' "$b")"
   while IFS= read -r f; do
     file="$(jq -r '.rule_file // ""' <<< "$f")"; sec="$(jq -r '.rule_section // ""' <<< "$f")"; key="$file#$sec"
     ok=false
@@ -61,7 +63,7 @@ filter)
       [ -f "$root/$file" ] && [ -n "$sec" ] && grep -qiF -- "$sec" "$root/$file" && ok=true ;;
     esac
     if [ "$ok" != true ]; then out="$(jq -c --argjson f "$f" '.notes += [$f]' <<< "$out")"
-    elif [ "$b" != - ] && ! jq -e --arg k "$key" 'index($k)' <<< "$keysb" > /dev/null; then out="$(jq -c --argjson f "$f" '.flaky += [$f]' <<< "$out")"
+    elif [ "$b" != - ] && ! jq -e --arg k "$file" 'index($k)' <<< "$keysb" > /dev/null; then out="$(jq -c --argjson f "$f" '.flaky += [$f]' <<< "$out")"
     else out="$(jq -c --argjson f "$f" --arg k "$key" '.blocking += [$f + {key: $k}] | .blocking |= unique_by(.key)' <<< "$out")"; fi
   done < <(jq -c '.findings // [] | .[]' "$a")
   # Fails closed: a FAIL that lists no finding at all still blocks, and so
