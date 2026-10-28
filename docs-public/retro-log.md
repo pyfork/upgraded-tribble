@@ -89,3 +89,10 @@
 - **Bugs traced:** none.
 - **Went wrong:** none recorded.
 - **Check proposed:** none.
+
+## greet, slice 2 (2026-10-28, written at slice 3)
+- **Watched:** none planned (nothing is deployed) → `acceptance/greet-2.sh` passes on the Linux CI runner in every `locked-checks` run since.
+- **Flow:** not measured: slice 1 predates `flow-numbers.sh`.
+- **Bugs traced:** none.
+- **Went wrong:** none recorded.
+- **Check proposed:** none.
