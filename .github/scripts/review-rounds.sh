@@ -75,11 +75,15 @@ filter)
   # Fails closed: a FAIL that lists no finding at all still blocks, and so
   # does a FAIL whose cited rules all failed the check (PROOF-21: a real
   # FAIL became a PASS that way), and so does a FAIL made only of uncited
-  # notes (PROOF-23: an injection FAIL cited no rule and passed). A FAIL
-  # never turns into a PASS; only flaky findings (cited, not repeated) drop
+  # notes (PROOF-23: an injection FAIL cited no rule and passed). Flaky
+  # findings drop only when the re-run did not FAIL too: two FAILs whose
+  # cites don't match are not a PASS (PROOF-23: the re-run cited nothing,
+  # so every finding of the first run looked unrepeated)
+  verdictb=-; [ "$b" != - ] && verdictb="$(jq -r '.verdict // "FAIL"' "$b")"
   if [ "$verdict" = FAIL ] && [ "$(jq '.findings // [] | length' "$a")" -eq 0 ]; then
     out="$(jq -c '.blocking += [{key: "reviewer#no findings", rule_file: "", rule_section: "", text: "The reviewer said FAIL but listed no finding"}]' <<< "$out")"
   elif [ "$verdict" = FAIL ] && [ "$(jq '.blocking | length' <<< "$out")" -eq 0 ]; then
+    [ "$verdictb" = FAIL ] && out="$(jq -c '.blocking = ([.flaky[] | . + {key: "\(.rule_file)#\(.rule_section)"}] | unique_by(.key)) | .flaky = []' <<< "$out")"
     while IFS= read -r f; do
       out="$(jq -c --argjson f "$f" '.blocking += [$f + {key: "\($f.rule_file)#\($f.rule_section)", text: ("Cited rule not found as given: " + $f.text)}] | .notes -= [$f]' <<< "$out")"
     done < <(jq -c '.notes[] | select(.rule_file != "")' <<< "$out")
