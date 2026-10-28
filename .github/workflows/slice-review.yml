@@ -298,7 +298,8 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     # kit-keeper-Opus5.5-agent, 2026-10-12: 30, not 15, for xhigh effort.
-    # 2026-10-28 (owner): Opus 5.5 at low effort; 30 kept until runs on low are timed
+    # 2026-10-28 (owner, after PROOF-21's 1-in-4): reviewer Sonnet 5.5 at medium,
+    # judge Opus 5.5 at low; 30 kept until runs on medium are timed
     timeout-minutes: 30
     environment: reviewer
     permissions:
@@ -475,8 +476,8 @@ jobs:
             finding that cites an existing rule file and heading blocks the
             PR; one with no rule is a note: leave rule_file empty.
           claude_args: |
-            --model claude-opus-5-5
-            --effort low
+            --model claude-sonnet-5-5
+            --effort medium
             --max-turns 40
             --add-dir pr-head
             --allowedTools "Read,Glob,Grep,Bash(git -C pr-head diff:*),Bash(git -C pr-head log:*),Bash(git -C pr-head show:*),Bash(gh pr view:*),Bash(gh pr diff:*)"
@@ -542,8 +543,8 @@ jobs:
             finding that cites an existing rule file and heading blocks the
             PR; one with no rule is a note: leave rule_file empty.
           claude_args: |
-            --model claude-opus-5-5
-            --effort low
+            --model claude-sonnet-5-5
+            --effort medium
             --max-turns 40
             --add-dir pr-head
             --allowedTools "Read,Glob,Grep,Bash(git -C pr-head diff:*),Bash(git -C pr-head log:*),Bash(git -C pr-head show:*),Bash(gh pr view:*),Bash(gh pr diff:*)"
