@@ -22,6 +22,8 @@ permissions: {}
 
 jobs:
   owner-approval:
+    # owner-review skips every review but the owner's (that run ends "skipped")
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: reviewer
