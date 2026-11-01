@@ -109,3 +109,5 @@
 ```text
 Open questions:     none
 ```
+
+<!-- KIT-019 P2, 2026-11-01: a plan-only change the owner approves. -->
