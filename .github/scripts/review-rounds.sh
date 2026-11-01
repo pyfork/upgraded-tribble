@@ -2,6 +2,7 @@
 # guard-builder-Opus5.5-agent, 2026-10-28 (KIT-014)
 # The review loop: the reviewer gates, the judge rules on two fix rounds,
 # then the owner. slice-review.yml calls it; it calls no model itself.
+# A "Not a slice" FAIL skips the rounds and the owner: the Lead closes it.
 #
 #   review-rounds.sh state  <reviews.json>             -> state JSON
 #   review-rounds.sh filter <runA> <runB|-> <root>     -> filtered findings JSON
