@@ -19,7 +19,11 @@ concurrency:
 permissions: {}
 
 jobs:
-  test-lock:
+  # kit-reviewer-Opus5.5-agent, 2026-11-01 (KIT-019): not named test-lock.
+  # GitHub counted this job's own run as the required `test-lock` check too,
+  # so after the owner's approval turned the app's check green, the job's
+  # earlier red run still blocked the merge (tribble #165)
+  compare-locks:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: reviewer

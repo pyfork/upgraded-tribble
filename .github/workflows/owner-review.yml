@@ -12,7 +12,12 @@ on:
 permissions: {}
 
 jobs:
+  # Only the owner's reviews matter. The reviewer app posts a review on every
+  # run, and each fired owner-approval for nothing (KIT-019 proof). A skipped
+  # job ends the run "skipped", which owner-approval ignores. This filter only
+  # saves runs: owner-approval checks the approval itself
   signal:
+    if: github.event.review.user.login == vars.GUARD_OWNER_LOGIN
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
