@@ -26,3 +26,5 @@
 ```text
 Open questions:     none
 ```
+
+<!-- KIT-019 P3, 2026-11-01: approve, then the agent pushes again. -->
