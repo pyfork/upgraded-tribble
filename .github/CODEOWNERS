@@ -12,3 +12,4 @@
 /docs-public/guard-data/expected-protection.json @pyfork
 /docs-public/guard-data/runtime.txt @pyfork
 /specs/features/*/brief.md @pyfork
+# KIT-019 P4, 2026-11-01: a guard-only change the owner approves
