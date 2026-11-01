@@ -144,7 +144,9 @@ if [ -n "$approvals" ]; then found=1; section "Plans bypass-merged (only plan fi
 
 # kit-reviewer-Opus5.5-agent, 2026-11-01 (KIT-019): on Mondays (or
 # WEEKLY=1), how often the owner was needed in the last 7 days, against the
-# target, and one PR that merged itself for the Lead's weekly read
+# target (a share of PRs: the pace varies), and one PR that merged itself
+# for the Lead's weekly read
+# shortcut: reads the last 100 closed PRs; past 100 merges a week, add --paginate
 owner="${GUARD_OWNER_LOGIN:-}"
 if [ -n "$owner" ] && { [ "$(date -u +%u)" = 1 ] || [ "${WEEKLY:-}" = 1 ]; }; then
   week="$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)"
@@ -161,7 +163,9 @@ if [ -n "$owner" ] && { [ "$(date -u +%u)" = 1 ] || [ "${WEEKLY:-}" = 1 ]; }; th
   need="$(printf '%s' "$touched" | wc -w | tr -d ' ')"
   found=1; section "This week: how often you were needed (KIT-019)"
   echo "- $merged PRs merged; $((merged - need)) merged themselves; $need needed you${touched:+ ($touched )}." >> "$out"
-  echo "- Target: under 5 a week, each one data, sign-in, legal text, deploy, guards or the brief. Two weeks over it: revisit the risk map." >> "$out"
+  share=0; [ "$merged" -eq 0 ] || share=$((need * 100 / merged))
+  over=""; [ "$share" -lt 25 ] || over=" **Over the target.**"
+  echo "- You were needed on $share% of PRs. Target: under 25%, each one data, sign-in, legal text, deploy, guards, the brief or a plan.$over Two weeks over it: revisit the risk map and the second approver (KIT-019, section 8)." >> "$out"
   # shellcheck disable=SC2086
   [ -z "$selfs" ] || echo "- Sample for the Lead's weekly read: #$(printf '%s\n' $selfs | shuf -n 1 2>/dev/null || printf '%s\n' $selfs | head -1)" >> "$out"
 fi
