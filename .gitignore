@@ -133,3 +133,5 @@ docs/
 
 # Python virtual environment (KIT-007 proof)
 .venv/
+screens-out/
+node_modules/

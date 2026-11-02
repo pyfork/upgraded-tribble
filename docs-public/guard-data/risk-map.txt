@@ -14,3 +14,4 @@ SHARED  docs-public/guard-data/risk-map.txt
 SHARED  docs-public/guard-data/expected-protection.json
 SHARED  docs-public/guard-data/runtime.txt
 SHARED  specs/features/*/brief.md
+SHARED  acceptance/screens/**

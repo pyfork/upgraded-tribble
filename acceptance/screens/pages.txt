@@ -1,0 +1,3 @@
+# KIT-020: stand-in pages, one per line: <name> <path or URL>
+home acceptance/screens/pages/home.html
+about acceptance/screens/pages/about.html
